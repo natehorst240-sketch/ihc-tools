@@ -3,1347 +3,236 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Veryon Dashboard Generator</title>
+<title>IHC Health Services — Flight Operations Tools</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
-  --bg:#07090c;--surface:#0e1117;--surface2:#141820;--surface3:#1a202b;
-  --border:#1e2530;--border2:#252f3e;
-  --green:#00e676;--amber:#ffab00;--red:#ff1744;--blue:#29b6f6;--purple:#ce93d8;
-  --text:#cdd6e0;--muted:#4a5568;--heading:#e8edf2;
+  --bg:#07090c;--surface:#0e1117;--surface2:#141820;--border:#1e2530;--border2:#252f3e;
+  --green:#00e676;--amber:#ffab00;--red:#ff1744;--blue:#29b6f6;--muted:#4a5568;
+  --text:#cdd6e0;--heading:#e8edf2;
   --mono:'Share Tech Mono',monospace;--sans:'Barlow Condensed',sans-serif;--body:'Barlow',sans-serif;
-  --radius:6px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
 body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:0;}
 
-/* ---- Layout ---- */
-.shell{max-width:860px;margin:0 auto;padding:40px 28px 80px;position:relative;z-index:1;}
-
-/* ---- Header ---- */
-.hdr{margin-bottom:40px;border-bottom:1px solid var(--border);padding-bottom:28px;}
-.hdr-eyebrow{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
-.hdr-title{font-family:var(--sans);font-size:42px;font-weight:900;letter-spacing:2px;color:var(--heading);text-transform:uppercase;line-height:1;}
-.hdr-title span{color:var(--blue);}
-.hdr-sub{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.6;}
-
-/* ---- Steps ---- */
-.steps{display:flex;gap:0;margin-bottom:32px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.step-indicator{flex:1;padding:10px 14px;background:var(--surface);border-right:1px solid var(--border);text-align:center;cursor:pointer;transition:.15s;}
-.step-indicator:last-child{border-right:none;}
-.step-indicator.active{background:var(--surface2);border-bottom:2px solid var(--blue);}
-.step-indicator.done{background:var(--surface);border-bottom:2px solid var(--green);}
-.step-num{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;}
-.step-lbl{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
-.step-indicator.active .step-lbl{color:var(--blue);}
-.step-indicator.done .step-lbl{color:var(--green);}
-
-/* ---- Sections ---- */
-.section{display:none;}
-.section.active{display:block;}
-.section-title{font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:18px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.section-title span{color:var(--blue);}
-
-/* ---- Form elements ---- */
-.field{margin-bottom:20px;}
-.field label{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
-.field label b{color:var(--text);}
-.field-hint{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5;}
-input[type=text], input[type=number], select, textarea{
-  width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);
-  color:var(--text);font-family:var(--mono);font-size:12px;padding:10px 12px;outline:none;
-  transition:border-color .15s;
+/* animated grid bg */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(41,182,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(41,182,246,0.03) 1px,transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;z-index:0;
+  animation:gridScroll 30s linear infinite;
 }
-input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{border-color:var(--blue);}
-textarea{resize:vertical;min-height:80px;line-height:1.5;}
-select option{background:var(--surface2);}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+@keyframes gridScroll{from{background-position:0 0;}to{background-position:60px 60px;}}
 
-/* ---- CSV paste area ---- */
-.csv-drop{border:1px dashed var(--border2);border-radius:var(--radius);padding:20px;background:var(--surface);cursor:pointer;transition:.15s;text-align:center;}
-.csv-drop:hover{border-color:var(--blue);background:var(--surface2);}
-.csv-drop-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px;}
-.csv-paste{margin-top:10px;}
+.shell{max-width:1100px;margin:0 auto;padding:60px 32px 80px;position:relative;z-index:1;}
 
-/* ---- Detected columns ---- */
-.col-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-.col-chip{font-family:var(--mono);font-size:10px;padding:4px 8px;border:1px solid var(--border2);border-radius:4px;color:var(--muted);cursor:pointer;transition:.12s;user-select:none;}
-.col-chip:hover{border-color:var(--blue);color:var(--blue);}
-.col-chip.selected{background:rgba(41,182,246,0.12);border-color:var(--blue);color:var(--blue);}
+/* Header */
+.hdr{text-align:center;margin-bottom:64px;}
+.hdr-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:16px;opacity:0;animation:fadeUp .6s .1s forwards;}
+.hdr-logo{font-family:var(--sans);font-size:64px;font-weight:900;letter-spacing:4px;text-transform:uppercase;line-height:1;color:var(--heading);opacity:0;animation:fadeUp .6s .2s forwards;}
+.hdr-logo span{color:var(--blue);}
+.hdr-rule{width:80px;height:2px;background:linear-gradient(90deg,transparent,var(--blue),transparent);margin:20px auto;opacity:0;animation:fadeUp .6s .3s forwards;}
+.hdr-sub{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;opacity:0;animation:fadeUp .6s .4s forwards;}
 
-/* ---- Inspection list builder ---- */
-.insp-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
-.insp-row{display:grid;grid-template-columns:1fr 1fr 130px 130px 36px;gap:8px;align-items:center;}
-.insp-row input, .insp-row select{margin:0;}
-.insp-row-hdr{display:grid;grid-template-columns:1fr 1fr 130px 130px 36px;gap:8px;margin-bottom:4px;}
-.insp-hdr-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
-.btn-del{width:36px;height:36px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.12s;flex:0 0 auto;}
-.btn-del:hover{border-color:var(--red);color:var(--red);}
-.btn-add{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 14px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;transition:.12s;}
-.btn-add:hover{border-color:var(--green);color:var(--green);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 
-/* ---- Chart inspection selector ---- */
-.radio-group{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
-.radio-opt{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;transition:.12s;}
-.radio-opt:hover{border-color:var(--blue);}
-.radio-opt.selected{border-color:var(--blue);background:rgba(41,182,246,0.06);}
-.radio-opt input{accent-color:var(--blue);}
-.radio-opt-lbl{font-family:var(--mono);font-size:11px;color:var(--text);}
-.radio-opt-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px;}
+/* Status bar */
+.status-bar{display:flex;justify-content:center;gap:32px;margin-bottom:56px;flex-wrap:wrap;opacity:0;animation:fadeUp .6s .5s forwards;}
+.status-item{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 6px var(--green);}50%{opacity:.5;box-shadow:0 0 14px var(--green);}}
+.pulse-amber{background:var(--amber);box-shadow:0 0 8px var(--amber);}
+@keyframes pulseAmber{0%,100%{opacity:1;box-shadow:0 0 6px var(--amber);}50%{opacity:.5;box-shadow:0 0 14px var(--amber);}}
 
-/* ---- Nav buttons ---- */
-.nav-row{display:flex;justify-content:space-between;margin-top:32px;gap:12px;}
-.btn-back{font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 20px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;transition:.12s;}
-.btn-back:hover{border-color:var(--text);color:var(--text);}
-.btn-next{font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;background:var(--blue);border:none;border-radius:var(--radius);color:#000;cursor:pointer;transition:.12s;}
-.btn-next:hover{background:#4fc3f7;}
-.btn-next:disabled{background:var(--muted);cursor:not-allowed;}
-.btn-generate{font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:16px 40px;background:var(--green);border:none;border-radius:var(--radius);color:#000;cursor:pointer;transition:.12s;box-shadow:0 0 30px rgba(0,230,118,0.2);}
-.btn-generate:hover{background:#69f0ae;box-shadow:0 0 40px rgba(0,230,118,0.35);}
+/* Section label */
+.section-label{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
-/* ---- Review panel ---- */
-.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
-.review-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
-.review-card-title{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
-.review-val{font-family:var(--sans);font-size:15px;font-weight:700;color:var(--heading);}
-.review-list{font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.8;}
-.review-list span{color:var(--blue);}
+/* Dashboard cards */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;margin-bottom:56px;}
 
-/* ---- Output ---- */
-.output-panel{background:var(--surface);border:1px solid var(--green);border-radius:var(--radius);padding:24px;text-align:center;}
-.output-icon{font-size:40px;margin-bottom:12px;}
-.output-title{font-family:var(--sans);font-size:20px;font-weight:900;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:8px;}
-.output-sub{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
-.btn-download{font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:14px 32px;background:var(--green);border:none;border-radius:var(--radius);color:#000;cursor:pointer;display:inline-flex;align-items:center;gap:8px;}
-.btn-download:hover{background:#69f0ae;}
-.file-list{margin-top:20px;text-align:left;font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.file-item{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.file-item:last-child{border-bottom:none;}
-.file-icon{color:var(--blue);width:14px;text-align:center;}
-.file-name{color:var(--text);}
-.file-desc{color:var(--muted);margin-left:auto;}
+.dash-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  overflow:hidden;cursor:pointer;text-decoration:none;display:block;
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+  opacity:0;animation:fadeUp .5s forwards;
+}
+.dash-card:nth-child(1){animation-delay:.5s;}
+.dash-card:nth-child(2){animation-delay:.6s;}
+.dash-card:nth-child(3){animation-delay:.7s;}
+.dash-card:hover{transform:translateY(-4px);border-color:var(--blue);box-shadow:0 8px 40px rgba(41,182,246,0.12);}
 
-.errbox{background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.35);border-radius:var(--radius);padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:16px;display:none;}
+.card-banner{height:6px;}
+.card-banner-blue{background:linear-gradient(90deg,var(--blue),rgba(41,182,246,0.3));}
+.card-banner-green{background:linear-gradient(90deg,var(--green),rgba(0,230,118,0.3));}
+.card-banner-amber{background:linear-gradient(90deg,var(--amber),rgba(255,171,0,0.3));}
 
-/* ---- Misc ---- */
-.divider{height:1px;background:var(--border);margin:24px 0;}
-.tag{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid var(--border2);color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-.tag-blue{border-color:rgba(41,182,246,0.4);color:var(--blue);}
-.tag-green{border-color:rgba(0,230,118,0.4);color:var(--green);}
-.progress-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:32px;overflow:hidden;}
-.progress-fill{height:3px;background:var(--blue);border-radius:2px;transition:width .4s;}
+.card-inner{padding:24px;}
+.card-icon{font-size:28px;margin-bottom:14px;}
+.card-type{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.card-title{font-family:var(--sans);font-size:22px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--heading);line-height:1;margin-bottom:8px;}
+.card-desc{font-family:var(--body);font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);}
+.card-url{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.card-arrow{font-family:var(--mono);font-size:16px;color:var(--blue);transition:transform .2s;}
+.dash-card:hover .card-arrow{transform:translateX(4px);}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.tag{font-family:var(--mono);font-size:9px;padding:3px 7px;border-radius:3px;letter-spacing:1px;text-transform:uppercase;border:1px solid var(--border2);color:var(--muted);}
+.tag-blue{border-color:rgba(41,182,246,0.35);color:var(--blue);}
+.tag-green{border-color:rgba(0,230,118,0.35);color:var(--green);}
+.tag-amber{border-color:rgba(255,171,0,0.35);color:var(--amber);}
+
+/* Tool cards (smaller) */
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:56px;}
+.tool-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;cursor:pointer;text-decoration:none;display:block;transition:transform .2s,border-color .2s;opacity:0;animation:fadeUp .5s forwards;}
+.tool-card:nth-child(1){animation-delay:.8s;}
+.tool-card:hover{transform:translateY(-3px);border-color:var(--green);}
+.tool-card-icon{font-size:22px;margin-bottom:12px;}
+.tool-card-title{font-family:var(--sans);font-size:17px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--heading);margin-bottom:6px;}
+.tool-card-desc{font-family:var(--body);font-size:12px;color:var(--muted);line-height:1.6;}
+.tool-card-footer{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.tool-card-url{font-family:var(--mono);font-size:9px;color:var(--muted);}
+
+/* Footer */
+footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;position:relative;z-index:1;}
+.footer-clock{color:var(--blue);}
+
+/* Merlin corner */
+#merlin-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;}
+#merlin-btn{width:56px;height:56px;background:var(--surface);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:.2s;box-shadow:0 0 20px rgba(0,0,0,0.4);}
+#merlin-btn:hover{border-color:var(--blue);box-shadow:0 0 20px rgba(41,182,246,0.2);}
+#merlin-bubble{display:none;position:absolute;bottom:68px;right:0;background:#0d1117;border:1px solid var(--blue);border-radius:8px 8px 0 8px;padding:12px 14px;max-width:240px;font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--text);box-shadow:0 0 20px rgba(41,182,246,0.15);}
+#merlin-text{}
+#merlin-dismiss{margin-top:8px;background:transparent;border:1px solid var(--blue);color:var(--blue);font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;}
 </style>
 </head>
 <body>
+
 <div class="shell">
 
   <div class="hdr">
-    <div class="hdr-eyebrow">IHC Health Services — Internal Tool</div>
-    <div class="hdr-title">Veryon <span>Dashboard</span> Generator</div>
-    <div class="hdr-sub">Configure a flight maintenance dashboard for any Veryon-tracked fleet.<br>Outputs a ready-to-deploy GitHub repository as a zip file.</div>
+    <div class="hdr-eyebrow">Flight Operations · Internal Tools</div>
+    <div class="hdr-logo">IHC <span>Health</span></div>
+    <div class="hdr-rule"></div>
+    <div class="hdr-sub">Air Medical Fleet Management &amp; Maintenance Tracking</div>
   </div>
 
-  <div class="progress-bar"><div class="progress-fill" id="progress" style="width:20%"></div></div>
-
-  <div class="steps" id="steps">
-    <div class="step-indicator active" onclick="goStep(1)"><div class="step-num">01</div><div class="step-lbl">Fleet Info</div></div>
-    <div class="step-indicator" onclick="goStep(2)"><div class="step-num">02</div><div class="step-lbl">CSV Setup</div></div>
-    <div class="step-indicator" onclick="goStep(3)"><div class="step-num">03</div><div class="step-lbl">Inspections</div></div>
-    <div class="step-indicator" onclick="goStep(4)"><div class="step-num">04</div><div class="step-lbl">Bar Chart</div></div>
-    <div class="step-indicator" onclick="goStep(5)"><div class="step-num">05</div><div class="step-lbl">Review</div></div>
+  <div class="status-bar">
+    <div class="status-item"><div class="pulse"></div> AW109 Dashboard Online</div>
+    <div class="status-item"><div class="pulse"></div> Bell 407 Dashboard Online</div>
+    <div class="status-item"><div class="pulse" style="background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pulseAmber 2s infinite;"></div> Veryon Sync Active</div>
   </div>
 
-  <div id="err" class="errbox"></div>
+  <div class="section-label">Fleet Dashboards</div>
+  <div class="dash-grid">
 
-  <!-- ===== STEP 1: Fleet Info ===== -->
-  <div class="section active" id="s1">
-    <div class="section-title"><span>01</span> Fleet Information</div>
-    <div class="row2">
-      <div class="field">
-        <label><b>Fleet / Aircraft Type</b></label>
-        <input type="text" id="fleet-name" placeholder="e.g. Bell 412, AW139, EC135" />
-        <div class="field-hint">Used in dashboard title and file names</div>
-      </div>
-      <div class="field">
-        <label><b>Organization Name</b></label>
-        <input type="text" id="org-name" placeholder="e.g. IHC Health Services" />
-      </div>
-    </div>
-    <div class="field">
-      <label><b>GitHub Repo Name</b> (no spaces)</label>
-      <input type="text" id="repo-name" placeholder="e.g. 412-fleet-tracker" />
-      <div class="field-hint">Will be used for GitHub Pages URL: username.github.io/repo-name</div>
-    </div>
-    <div class="field">
-      <label><b>Daily CSV Filename</b></label>
-      <input type="text" id="daily-csv" placeholder="e.g. 412_daily_due_list.csv" />
-      <div class="field-hint">The file your Windows task scheduler drops into data/ each day</div>
-    </div>
-    <div class="field">
-      <label><b>Weekly / Long Range CSV Filename</b> (optional)</label>
-      <input type="text" id="weekly-csv" placeholder="e.g. 412_Due-List_weekly.csv" />
-      <div class="field-hint">Used to bootstrap utilization history. Leave blank if not available.</div>
-    </div>
-    <div class="nav-row">
-      <div></div>
-      <button class="btn-next" onclick="nextStep(1)">Next →</button>
-    </div>
-  </div>
-
-  <!-- ===== STEP 2: CSV Setup ===== -->
-  <div class="section" id="s2">
-    <div class="section-title"><span>02</span> CSV Column Detection</div>
-    <div class="field">
-      <label><b>Paste a sample row from your Veryon daily export</b></label>
-      <div class="field-hint" style="margin-bottom:8px;">Include the header row + at least one data row. Merlin will sniff out the columns and let you pick which ones identify inspection types.</div>
-      <textarea id="csv-sample" placeholder="Registration Number,ATA and Code,Description,Item Type,Requirement Type,Remaining Hours,Remaining Days,Next Due Date,...&#10;N412AB,05 12MO- INSPECTION,12 MONTH AIRFRAME INSPECTION,INSPECTION,,120,45,2026-06-15,..." rows="5"></textarea>
-    </div>
-    <button class="btn-add" onclick="detectColumns()" style="margin-bottom:16px;">⚡ Detect Columns</button>
-
-    <div id="col-detect-result" style="display:none;">
-      <div class="field">
-        <label><b>Detected Columns</b> — click any that help identify inspection type</label>
-        <div class="field-hint" style="margin-bottom:8px;">Standard columns (ATA, Description, Item Type, Requirement Type) are always used. Select any additional columns that your fleet uses to categorize inspections.</div>
-        <div class="col-grid" id="col-chips"></div>
-      </div>
-      <div id="sample-values" style="display:none;" class="field">
-        <label><b>Sample values from selected column</b></label>
-        <div class="col-grid" id="sample-val-chips"></div>
-      </div>
-    </div>
-
-    <div class="nav-row">
-      <button class="btn-back" onclick="prevStep(2)">← Back</button>
-      <button class="btn-next" onclick="nextStep(2)">Next →</button>
-    </div>
-  </div>
-
-  <!-- ===== STEP 3: Inspections ===== -->
-  <div class="section" id="s3">
-    <div class="section-title"><span>03</span> Inspections to Track <span style="font-size:10px;color:var(--muted);font-weight:400;"> — max 9</span></div>
-    <div class="field-hint" style="margin-bottom:14px;">
-      Enter each inspection you want tracked. The <b>ATA Match String</b> is the text that appears in the ATA and Code column of your CSV — it's how the build script identifies this inspection type. The <b>Display Name</b> is what shows on the dashboard.
-    </div>
-
-    <div class="insp-row-hdr">
-      <div class="insp-hdr-lbl">Display Name</div>
-      <div class="insp-hdr-lbl">ATA Match String</div>
-      <div class="insp-hdr-lbl">Metric</div>
-      <div class="insp-hdr-lbl">Urgency Thresholds</div>
-      <div></div>
-    </div>
-    <div class="insp-list" id="insp-list"></div>
-    <button class="btn-add" onclick="addInspRow()" id="btn-add-insp">+ Add Inspection</button>
-
-    <div class="divider"></div>
-    <div class="field">
-      <label><b>Component Window</b> — show components due within this many hours</label>
-      <input type="number" id="comp-window" value="200" min="50" max="1000" style="max-width:160px;" />
-      <div class="field-hint">Applies to the Components tab (PART items + OVERHAUL inspections)</div>
-    </div>
-
-    <div class="nav-row">
-      <button class="btn-back" onclick="prevStep(3)">← Back</button>
-      <button class="btn-next" onclick="nextStep(3)">Next →</button>
-    </div>
-  </div>
-
-  <!-- ===== STEP 4: Bar Chart ===== -->
-  <div class="section" id="s4">
-    <div class="section-title"><span>04</span> Homepage Bar Chart</div>
-    <div class="field-hint" style="margin-bottom:16px;">
-      Choose which inspection to feature on the bar chart on the Inspections tab. This is the one your ops team cares about most — typically the annual inspection or a major interval check.
-    </div>
-    <div class="field">
-      <label><b>Select inspection for bar chart</b></label>
-      <div class="radio-group" id="chart-radio"></div>
-    </div>
-    <div class="field" style="margin-top:16px;">
-      <label><b>Chart metric</b></label>
-      <div class="row2">
-        <div class="radio-opt" id="metric-weeks" onclick="selectMetric('weeks')" style="cursor:pointer;">
-          <input type="radio" name="metric" value="weeks"/> 
-          <div><div class="radio-opt-lbl">Weeks Remaining</div><div class="radio-opt-sub">Date-driven inspection (e.g. 12 Month, annual)</div></div>
+    <a class="dash-card" href="https://natehorst240-sketch.github.io/ihc-fleet-dashboard/" target="_blank">
+      <div class="card-banner card-banner-blue"></div>
+      <div class="card-inner">
+        <div class="card-icon">🚁</div>
+        <div class="card-type">Fleet Dashboard</div>
+        <div class="card-title">AW109 Fleet</div>
+        <div class="card-tags">
+          <span class="tag tag-blue">Flightdocs</span>
+          <span class="tag tag-blue">ADS-B Live</span>
+          <span class="tag">9 Aircraft</span>
+          <span class="tag">Base Tracking</span>
         </div>
-        <div class="radio-opt" id="metric-hours" onclick="selectMetric('hours')" style="cursor:pointer;">
-          <input type="radio" name="metric" value="hours"/>
-          <div><div class="radio-opt-lbl">Hours Remaining</div><div class="radio-opt-sub">Hour-driven inspection (e.g. 300HR, 600HR)</div></div>
+        <div class="card-desc">Inspections, utilization history, base assignments, and live ADS-B position tracking for the IHC AW109SP fleet.</div>
+        <div class="card-footer">
+          <span class="card-url">ihc-fleet-dashboard</span>
+          <span class="card-arrow">→</span>
         </div>
       </div>
-    </div>
-    <div class="field">
-      <label><b>Chart Title</b></label>
-      <input type="text" id="chart-title" placeholder="e.g. Weeks Remaining — 12 Month Inspection" />
-    </div>
-    <div class="nav-row">
-      <button class="btn-back" onclick="prevStep(4)">← Back</button>
-      <button class="btn-next" onclick="nextStep(4)">Next →</button>
-    </div>
+    </a>
+
+    <a class="dash-card" href="https://natehorst240-sketch.github.io/407-Fleet-Tracker/" target="_blank">
+      <div class="card-banner card-banner-amber"></div>
+      <div class="card-inner">
+        <div class="card-icon">🚁</div>
+        <div class="card-type">Fleet Dashboard</div>
+        <div class="card-title">Bell 407 Fleet</div>
+        <div class="card-tags">
+          <span class="tag tag-amber">Veryon</span>
+          <span class="tag tag-amber">Components</span>
+          <span class="tag">24 Aircraft</span>
+          <span class="tag">Utilization</span>
+        </div>
+        <div class="card-desc">Inspections, component retire/overhaul tracking, utilization history, and Merlin the passive-aggressive maintenance wizard.</div>
+        <div class="card-footer">
+          <span class="card-url">407-Fleet-Tracker</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
   </div>
 
-  <!-- ===== STEP 5: Review & Generate ===== -->
-  <div class="section" id="s5">
-    <div class="section-title"><span>05</span> Review & Generate</div>
-    <div class="review-grid" id="review-grid"></div>
-    <div id="output-panel" style="display:none;">
-      <div class="output-panel">
-        <div class="output-icon">📦</div>
-        <div class="output-title">Dashboard Ready</div>
-        <div class="output-sub" id="output-sub"></div>
-        <button class="btn-download" onclick="downloadZip()">⬇ Download ZIP</button>
-        <div class="file-list" id="file-list"></div>
+  <div class="section-label">Tools</div>
+  <div class="tool-grid">
+
+    <a class="tool-card" href="./generator/" target="_blank">
+      <div class="tool-card-icon">⚙️</div>
+      <div class="tool-card-title">Dashboard Generator</div>
+      <div class="tool-card-desc">Configure and generate a ready-to-deploy GitHub Pages maintenance dashboard for any Veryon-tracked fleet. Outputs a zip with build script, frontend, and GitHub Actions workflow.</div>
+      <div class="tool-card-footer">
+        <span class="tool-card-url">ihc-tools/generator</span>
+        <span style="color:var(--green);font-family:var(--mono);font-size:14px;">→</span>
       </div>
-    </div>
-    <div id="generate-row" class="nav-row">
-      <button class="btn-back" onclick="prevStep(5)">← Back</button>
-      <button class="btn-generate" onclick="generate()">⚡ Generate Dashboard</button>
-    </div>
+    </a>
+
   </div>
 
 </div><!-- /shell -->
 
-<script>
-// ===== State =====
-let currentStep = 1;
-let detectedColumns = [];
-let csvRows = [];
-let selectedExtraCol = null;
-let chartMetric = "weeks";
-let generatedZip = null;
-
-// ===== Step navigation =====
-function updateProgress(){
-  document.getElementById("progress").style.width = (currentStep/5*100)+"%";
-  document.querySelectorAll(".step-indicator").forEach((el,i)=>{
-    el.classList.remove("active","done");
-    if(i+1 === currentStep) el.classList.add("active");
-    else if(i+1 < currentStep) el.classList.add("done");
-  });
-}
-
-function goStep(n){
-  if(n > currentStep) return; // only go back freely
-  document.getElementById("s"+currentStep).classList.remove("active");
-  currentStep = n;
-  document.getElementById("s"+currentStep).classList.add("active");
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function showErr(msg){ const e=document.getElementById("err"); e.textContent=msg; e.style.display="block"; setTimeout(()=>e.style.display="none",4000); }
-
-function nextStep(from){
-  if(!validateStep(from)) return;
-  if(from===3) buildChartRadio();
-  if(from===4) buildReview();
-  document.getElementById("s"+from).classList.remove("active");
-  currentStep = from+1;
-  document.getElementById("s"+currentStep).classList.add("active");
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function prevStep(from){
-  document.getElementById("s"+from).classList.remove("active");
-  currentStep = from-1;
-  document.getElementById("s"+currentStep).classList.add("active");
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// ===== Validation =====
-function validateStep(n){
-  if(n===1){
-    if(!v("fleet-name"))  return showErr("Fleet name is required"), false;
-    if(!v("org-name"))    return showErr("Organization name is required"), false;
-    if(!v("repo-name"))   return showErr("Repo name is required"), false;
-    if(!v("daily-csv"))   return showErr("Daily CSV filename is required"), false;
-    // sanitize repo name
-    document.getElementById("repo-name").value = document.getElementById("repo-name").value.replace(/\s+/g,"-").toLowerCase();
-  }
-  if(n===3){
-    const rows = getInspRows();
-    if(!rows.length) return showErr("Add at least one inspection to track"), false;
-    for(const r of rows){
-      if(!r.name || !r.match) return showErr("All inspections need a display name and ATA match string"), false;
-    }
-  }
-  if(n===4){
-    if(!document.querySelector('input[name="chart-insp"]:checked')) return showErr("Select an inspection for the bar chart"), false;
-    if(!chartMetric) return showErr("Select weeks or hours for the chart metric"), false;
-    if(!v("chart-title")) return showErr("Enter a chart title"), false;
-  }
-  return true;
-}
-
-function v(id){ return document.getElementById(id).value.trim(); }
-
-// ===== CSV Column Detection =====
-function detectColumns(){
-  const raw = document.getElementById("csv-sample").value.trim();
-  if(!raw){ showErr("Paste a sample CSV first"); return; }
-
-  const lines = raw.split(/\r?\n/).filter(l=>l.trim());
-  if(lines.length < 2){ showErr("Need at least a header row and one data row"); return; }
-
-  // Parse CSV header
-  const header = parseCSVLine(lines[0]);
-  csvRows = lines.slice(1).map(l => {
-    const vals = parseCSVLine(l);
-    const obj = {};
-    header.forEach((h,i) => obj[h.trim()] = (vals[i]||"").trim());
-    return obj;
-  });
-  detectedColumns = header.map(h=>h.trim());
-
-  // Standard columns we always use
-  const STANDARD = ["Registration Number","ATA and Code","Description","Item Type",
-    "Requirement Type","Remaining Hours","Remaining Days","Next Due Date",
-    "Next Due Hours","Status","Next Due Status"];
-
-  const extra = detectedColumns.filter(c => !STANDARD.some(s=>s.toLowerCase()===c.toLowerCase()));
-
-  const chips = document.getElementById("col-chips");
-  chips.innerHTML = "";
-
-  // Show standard ones greyed out
-  STANDARD.forEach(col=>{
-    if(detectedColumns.includes(col)){
-      const chip = document.createElement("div");
-      chip.className = "col-chip";
-      chip.style.opacity = "0.4";
-      chip.title = "Standard column — always included";
-      chip.textContent = col;
-      chips.appendChild(chip);
-    }
-  });
-
-  // Show extra ones as selectable
-  extra.forEach(col=>{
-    const chip = document.createElement("div");
-    chip.className = "col-chip";
-    chip.textContent = col;
-    chip.onclick = () => toggleExtraCol(chip, col);
-    chips.appendChild(chip);
-  });
-
-  document.getElementById("col-detect-result").style.display="block";
-}
-
-function toggleExtraCol(chip, col){
-  document.querySelectorAll(".col-chip").forEach(c=>c.classList.remove("selected"));
-  if(selectedExtraCol === col){
-    selectedExtraCol = null;
-    document.getElementById("sample-values").style.display="none";
-    return;
-  }
-  chip.classList.add("selected");
-  selectedExtraCol = col;
-
-  // Show sample values from this column
-  const vals = [...new Set(csvRows.map(r=>r[col]).filter(Boolean))].slice(0,20);
-  const container = document.getElementById("sample-val-chips");
-  container.innerHTML = "";
-  vals.forEach(v=>{
-    const c = document.createElement("span");
-    c.className = "col-chip tag-blue";
-    c.textContent = v;
-    container.appendChild(c);
-  });
-  document.getElementById("sample-values").style.display="block";
-}
-
-function parseCSVLine(line){
-  const result=[], re=/("(?:[^"]|"")*"|[^,]*)/g;
-  let m;
-  while((m=re.exec(line))!==null){
-    if(m.index===re.lastIndex) re.lastIndex++;
-    let val=m[1];
-    if(val.startsWith('"')&&val.endsWith('"')) val=val.slice(1,-1).replace(/""/g,'"');
-    result.push(val);
-  }
-  return result;
-}
-
-// ===== Inspection row builder =====
-function addInspRow(name="", match="", metric="days", warn=30, crit=7){
-  const list = document.getElementById("insp-list");
-  if(list.children.length >= 9){ showErr("Maximum 9 inspections (keeps the bar chart readable)"); return; }
-  const idx = Date.now();
-  const row = document.createElement("div");
-  row.className = "insp-row";
-  row.dataset.idx = idx;
-  row.innerHTML = `
-    <input type="text" placeholder="12 Month" value="${name}" class="insp-name" />
-    <input type="text" placeholder="05 12MO-" value="${match}" class="insp-match" />
-    <select class="insp-metric">
-      <option value="days" ${metric==="days"?"selected":""}>Days remaining</option>
-      <option value="hours" ${metric==="hours"?"selected":""}>Hours remaining</option>
-    </select>
-    <div style="display:flex;gap:4px;">
-      <input type="number" placeholder="Warn" value="${warn}" class="insp-warn" title="Warning threshold" style="width:60px;" />
-      <input type="number" placeholder="Crit" value="${crit}" class="insp-crit" title="Critical threshold" style="width:60px;" />
-    </div>
-    <button class="btn-del" onclick="this.closest('.insp-row').remove();updateAddBtn()">×</button>`;
-  list.appendChild(row);
-  updateAddBtn();
-}
-
-function updateAddBtn(){
-  const count = document.getElementById("insp-list").children.length;
-  document.getElementById("btn-add-insp").style.display = count >= 9 ? "none" : "inline-block";
-}
-
-function getInspRows(){
-  return Array.from(document.querySelectorAll(".insp-row")).map(row=>({
-    name:  row.querySelector(".insp-name").value.trim(),
-    match: row.querySelector(".insp-match").value.trim(),
-    metric:row.querySelector(".insp-metric").value,
-    warn:  parseInt(row.querySelector(".insp-warn").value)||30,
-    crit:  parseInt(row.querySelector(".insp-crit").value)||7,
-  }));
-}
-
-// Pre-populate with some common ones
-addInspRow("12 Month","05 12MO-","days",30,7);
-addInspRow("24 Month","05 24MO-","days",30,7);
-addInspRow("300HR/12M Airframe","05 300HR-","hours",100,25);
-
-// ===== Metric selector =====
-function selectMetric(m){
-  chartMetric = m;
-  document.getElementById("metric-weeks").classList.toggle("selected", m==="weeks");
-  document.getElementById("metric-hours").classList.toggle("selected", m==="hours");
-  document.querySelector('#metric-weeks input').checked = m==="weeks";
-  document.querySelector('#metric-hours input').checked = m==="hours";
-  // Auto-update chart title
-  const sel = document.querySelector('input[name="chart-insp"]:checked');
-  if(sel){
-    const label = m==="weeks" ? `Weeks Remaining — ${sel.value}` : `Hours Remaining — ${sel.value}`;
-    document.getElementById("chart-title").value = label;
-  }
-}
-selectMetric("weeks");
-
-// ===== Build chart radio from inspection list =====
-function buildChartRadio(){
-  const rows = getInspRows();
-  const container = document.getElementById("chart-radio");
-  container.innerHTML = "";
-  rows.forEach(r=>{
-    const div = document.createElement("div");
-    div.className = "radio-opt";
-    div.onclick = function(){
-      document.querySelectorAll(".radio-opt").forEach(o=>o.classList.remove("selected"));
-      this.classList.add("selected");
-      this.querySelector("input").checked = true;
-      const label = chartMetric==="weeks" ? `Weeks Remaining — ${r.name}` : `Hours Remaining — ${r.name}`;
-      document.getElementById("chart-title").value = label;
-    };
-    div.innerHTML = `<input type="radio" name="chart-insp" value="${r.name}" />
-      <div><div class="radio-opt-lbl">${r.name}</div><div class="radio-opt-sub">ATA match: ${r.match}</div></div>`;
-    container.appendChild(div);
-  });
-}
-
-// ===== Build review panel =====
-function buildReview(){
-  const rows = getInspRows();
-  const chartInsp = document.querySelector('input[name="chart-insp"]:checked')?.value || "—";
-  const grid = document.getElementById("review-grid");
-  grid.innerHTML = `
-    <div class="review-card">
-      <div class="review-card-title">Fleet</div>
-      <div class="review-val">${v("fleet-name")}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Organization</div>
-      <div class="review-val">${v("org-name")}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Repo Name</div>
-      <div class="review-val">${v("repo-name")}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Daily CSV</div>
-      <div class="review-val" style="font-size:12px;">${v("daily-csv")}</div>
-    </div>
-    <div class="review-card" style="grid-column:1/-1;">
-      <div class="review-card-title">Inspections (${rows.length})</div>
-      <div class="review-list">${rows.map(r=>`<span>${r.name}</span> — ${r.match} [${r.metric}]`).join("<br>")}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Bar Chart Inspection</div>
-      <div class="review-val" style="font-size:13px;">${chartInsp}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Chart Metric</div>
-      <div class="review-val">${chartMetric === "weeks" ? "Weeks Remaining" : "Hours Remaining"}</div>
-    </div>`;
-}
-
-// ===== Code generation =====
-function generate(){
-  document.getElementById("generate-row").style.display="none";
-
-  const fleetName   = v("fleet-name");
-  const orgName     = v("org-name");
-  const repoName    = v("repo-name");
-  const dailyCsv    = v("daily-csv");
-  const weeklyCsv   = v("weekly-csv");
-  const inspRows    = getInspRows();
-  const chartInsp   = document.querySelector('input[name="chart-insp"]:checked')?.value;
-  const chartTitle  = v("chart-title");
-  const compWindow  = parseInt(document.getElementById("comp-window").value)||200;
-  const fleetSlug   = fleetName.toLowerCase().replace(/[^a-z0-9]+/g,"_");
-
-  // Build ATA match strings for Python
-  const ataMatches = inspRows.map(r=>`"${r.match}"`).join(", ");
-
-  // Build inspection name->display map
-  const inspMap = inspRows.map(r=>`    "${r.match}": "${r.name}"`).join(",\n");
-
-  // ---- build_dashboard.py ----
-  const buildPy = `#!/usr/bin/env python3
-"""
-${fleetName} Fleet Dashboard Build Script
-Generated by Veryon Dashboard Generator
-Organization: ${orgName}
-"""
-
-import json
-import csv
-import re
-from pathlib import Path
-from datetime import datetime, date
-import pandas as pd
-
-# ---- Paths ----------------------------------------------------------------
-BASE_DIR     = Path(__file__).parent.parent
-DATA_DIR     = BASE_DIR / "data"
-DAILY_CSV    = DATA_DIR / "${dailyCsv}"
-${weeklyCsv ? `WEEKLY_CSV   = DATA_DIR / "${weeklyCsv}"` : `WEEKLY_CSV   = None  # not configured`}
-HISTORY_JSON = DATA_DIR / "${fleetSlug}_flight_hours_history.json"
-OUTPUT_JSON  = BASE_DIR / "dist" / "data" / "dashboard.json"
-
-# ---- Inspection ATA match strings ----------------------------------------
-# Maps ATA prefix -> display name
-INSPECTION_MAP = {
-${inspMap}
-}
-
-ATA_PREFIXES = [${ataMatches}]
-
-# ---- Component window (hours) --------------------------------------------
-COMPONENT_WINDOW = ${compWindow}
-
-# ---- Helpers --------------------------------------------------------------
-def _norm(x):
-    if x is None or (isinstance(x, float) and pd.isna(x)):
-        return None
-    return str(x).strip()
-
-def _read_csv(path):
-    for enc in ("utf-8-sig", "cp1252", "utf-8"):
-        try:
-            return pd.read_csv(path, encoding=enc, dtype=str, low_memory=False)
-        except UnicodeDecodeError:
-            continue
-    return pd.read_csv(path, encoding="latin-1", dtype=str, low_memory=False)
-
-def load_history():
-    if HISTORY_JSON.exists():
-        with open(HISTORY_JSON, encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-def save_history(history):
-    HISTORY_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(HISTORY_JSON, "w", encoding="utf-8") as f:
-        json.dump(history, f, indent=2)
-
-def collect_snapshots(df):
-    df = df.copy()
-    df.columns = [c.lstrip("\\ufeff").strip() for c in df.columns]
-    snapshots = []
-    for _, row in df.iterrows():
-        tail  = _norm(row.get("Registration Number",""))
-        hrs   = pd.to_numeric(row.get("Airframe Hours", row.get("Total Time","")), errors="coerce")
-        rdate = _norm(row.get("Report Date", row.get("Export Date","")))
-        if tail and not pd.isna(hrs) and rdate:
-            try:
-                dt = datetime.strptime(rdate, "%m/%d/%Y").date().isoformat()
-            except ValueError:
-                try:
-                    dt = datetime.strptime(rdate, "%Y-%m-%d").date().isoformat()
-                except ValueError:
-                    continue
-            snapshots.append((tail, dt, float(hrs)))
-    return snapshots
-
-def update_history(history, snapshots):
-    for tail, dt, hrs in snapshots:
-        if tail not in history:
-            history[tail] = {}
-        if dt not in history[tail]:
-            history[tail][dt] = hrs
-    return history
-
-def calculate_utilization(history):
-    util = {}
-    today = date.today()
-    for tail, entries in history.items():
-        if len(entries) < 2:
-            util[tail] = {"avg_daily": None, "projection_weekly": None,
-                          "projection_monthly": None, "daily_data": list(
-                              {"date": d, "hours": h} for d, h in sorted(entries.items())
-                          )}
-            continue
-        sorted_entries = sorted(entries.items())
-        daily_data = [{"date": d, "hours": h} for d, h in sorted_entries]
-
-        # Try 30-day span
-        cutoff_30 = (today - __import__("datetime").timedelta(days=30)).isoformat()
-        recent_30 = [(d, h) for d, h in sorted_entries if d >= cutoff_30]
-
-        if len(recent_30) >= 2:
-            span_days = (datetime.fromisoformat(recent_30[-1][0]) -
-                         datetime.fromisoformat(recent_30[0][0])).days
-            if span_days > 0:
-                avg = (recent_30[-1][1] - recent_30[0][1]) / span_days
-            else:
-                avg = 0.0
-        else:
-            # Fall back to any available span
-            span_days = (datetime.fromisoformat(sorted_entries[-1][0]) -
-                         datetime.fromisoformat(sorted_entries[0][0])).days
-            avg = (sorted_entries[-1][1] - sorted_entries[0][1]) / span_days if span_days > 0 else 0.0
-
-        avg = max(0.0, avg)
-        util[tail] = {
-            "avg_daily":          round(avg, 3),
-            "projection_weekly":  round(avg * 7, 2),
-            "projection_monthly": round(avg * 30, 2),
-            "daily_data":         daily_data,
-        }
-    return util
-
-def match_inspection(ata_code):
-    if not ata_code:
-        return None
-    ata_upper = str(ata_code).upper()
-    for prefix in ATA_PREFIXES:
-        if prefix.upper() in ata_upper:
-            return INSPECTION_MAP.get(prefix, prefix)
-    return None
-
-def urgency_key(item):
-    d = item.get("remaining_days")
-    h = item.get("remaining_hours")
-    if d is not None:
-        return (0, float(d))
-    if h is not None:
-        return (1, float(h))
-    return (2, 0)
-
-# ---- Main build -----------------------------------------------------------
-def build():
-    # Load and update history
-    history = load_history()
-    daily_df = _read_csv(DAILY_CSV)
-    daily_df.columns = [c.lstrip("\\ufeff").strip() for c in daily_df.columns]
-
-    snaps = collect_snapshots(daily_df)
-    history = update_history(history, snaps)
-
-    ${weeklyCsv ? `if WEEKLY_CSV and WEEKLY_CSV.exists():
-        weekly_df = _read_csv(WEEKLY_CSV)
-        weekly_df.columns = [c.lstrip("\\ufeff").strip() for c in weekly_df.columns]
-        snaps2 = collect_snapshots(weekly_df)
-        history = update_history(history, snaps2)` : `# No weekly CSV configured`}
-
-    save_history(history)
-    utilization = calculate_utilization(history)
-
-    # Filter inspection rows only
-    insp_df = daily_df[daily_df["Item Type"].astype(str).str.upper() == "INSPECTION"].copy()
-
-    # Parse numeric fields
-    insp_df["Remaining Hours"] = pd.to_numeric(insp_df.get("Remaining Hours",""), errors="coerce")
-    insp_df["Remaining Days"]  = pd.to_numeric(insp_df.get("Remaining Days",""),  errors="coerce")
-
-    # Get report date from most common date in export
-    try:
-        report_date = insp_df["Report Date"].dropna().mode()[0]
-        report_date = datetime.strptime(report_date, "%m/%d/%Y").date().isoformat()
-    except Exception:
-        report_date = date.today().isoformat()
-
-    # Build aircraft dict
-    aircraft_dict = {}
-    for _, row in insp_df.iterrows():
-        tail  = _norm(row.get("Registration Number","")) or "UNKNOWN"
-        ata   = _norm(row.get("ATA and Code",""))
-        insp  = match_inspection(ata)
-        if not insp:
-            continue
-
-        if tail not in aircraft_dict:
-            tt = pd.to_numeric(row.get("Airframe Hours", row.get("Total Time","")), errors="coerce")
-            aircraft_dict[tail] = {
-                "airframe_hours":       float(tt) if not pd.isna(tt) else None,
-                "airframe_report_date": report_date,
-                "items": []
-            }
-
-        rd = row["Remaining Days"]
-        rh = row["Remaining Hours"]
-        nd = _norm(row.get("Next Due Date",""))
-        status = _norm(row.get("Next Due Status", row.get("Status","")))
-
-        aircraft_dict[tail]["items"].append({
-            "inspection":      insp,
-            "ata":             ata,
-            "description":     _norm(row.get("Description","")),
-            "due_date":        nd,
-            "remaining_days":  float(rd) if not pd.isna(rd) else None,
-            "remaining_hours": float(rh) if not pd.isna(rh) else None,
-            "next_due_status": status,
-            "status":          _classify(rd, rh, status),
-        })
-
-    for data in aircraft_dict.values():
-        data["items"].sort(key=urgency_key)
-
-    aircraft_list = []
-    for tail in sorted(aircraft_dict.keys()):
-        data = aircraft_dict[tail]
-        util = utilization.get(tail, {})
-        aircraft_list.append({
-            "tail":               tail,
-            "airframe_hours":     data["airframe_hours"],
-            "airframe_report_date": data["airframe_report_date"],
-            "avg_daily":          util.get("avg_daily"),
-            "projection_weekly":  util.get("projection_weekly"),
-            "projection_monthly": util.get("projection_monthly"),
-            "daily_data":         util.get("daily_data", []),
-            "items":              data["items"],
-        })
-
-    # Components
-    components = []
-    parts = daily_df[daily_df["Item Type"].astype(str).str.upper() == "PART"].copy()
-    parts["Remaining Hours"] = pd.to_numeric(parts["Remaining Hours"], errors="coerce")
-    for _, row in parts.iterrows():
-        rh = row["Remaining Hours"]
-        if pd.isna(rh) or rh > COMPONENT_WINDOW:
-            continue
-        components.append({
-            "tail":            _norm(row.get("Registration Number","")),
-            "ata":             _norm(row.get("ATA and Code","")),
-            "description":     _norm(row.get("Description","")),
-            "item_type":       "PART",
-            "remaining_hours": float(rh),
-        })
-
-    insp_oh = daily_df[
-        (daily_df["Item Type"].astype(str).str.upper() == "INSPECTION") &
-        (daily_df["Requirement Type"].astype(str).str.upper() == "OVERHAUL")
-    ].copy()
-    insp_oh["Remaining Hours"] = pd.to_numeric(insp_oh["Remaining Hours"], errors="coerce")
-    for _, row in insp_oh.iterrows():
-        rh = row["Remaining Hours"]
-        if pd.isna(rh) or rh > COMPONENT_WINDOW:
-            continue
-        components.append({
-            "tail":            _norm(row.get("Registration Number","")),
-            "ata":             _norm(row.get("ATA and Code","")),
-            "description":     _norm(row.get("Description","")),
-            "item_type":       "OVERHAUL",
-            "remaining_hours": float(rh),
-        })
-    components.sort(key=lambda c: c["remaining_hours"])
-
-    out = {
-        "meta": {
-            "report_date":    report_date,
-            "generated_utc":  datetime.utcnow().isoformat(timespec="seconds") + "Z",
-            "fleet_name":     "${fleetName}",
-            "source":         str(DAILY_CSV),
-            "aircraft_count": len(aircraft_list),
-        },
-        "aircraft":   aircraft_list,
-        "components": components,
-    }
-
-    OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
-        json.dump(out, f, indent=2)
-
-    print(f"Read:    {DAILY_CSV} ({len(insp_df)} inspection rows)")
-    print(f"History: {HISTORY_JSON} ({sum(len(v) for v in history.values())} total snapshots)")
-    print(f"Built:   {OUTPUT_JSON} ({len(aircraft_list)} aircraft)")
-    print(f"Comps:   {len(components)} within {COMPONENT_WINDOW}h")
-
-def _classify(rd, rh, status):
-    if rd is not None and not (isinstance(rd, float) and pd.isna(rd)):
-        d = float(rd)
-        if d < 0:   return "OVERDUE"
-        if d <= 7:  return "CRITICAL"
-        if d <= 30: return "COMING DUE"
-        return "OK"
-    if rh is not None and not (isinstance(rh, float) and pd.isna(rh)):
-        h = float(rh)
-        if h < 0:    return "OVERDUE"
-        if h <= 25:  return "CRITICAL"
-        if h <= 100: return "COMING DUE"
-        return "OK"
-    s = str(status).upper() if status else ""
-    if "PAST DUE" in s or "OVERDUE" in s: return "OVERDUE"
-    if "CRITICAL" in s:  return "CRITICAL"
-    if "COMING" in s:    return "COMING DUE"
-    return "OK"
-
-if __name__ == "__main__":
-    build()
-`;
-
-  // ---- GitHub Actions workflow ----
-  const workflowYml = `name: Build ${fleetName} Dashboard
-
-on:
-  schedule:
-    - cron: '*/30 * * * *'
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          token: \${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install pandas
-
-      - name: Build dashboard JSON
-        run: python src/build_dashboard.py
-
-      - name: Copy site to dist
-        run: |
-          mkdir -p dist
-          if [ -d "public" ]; then cp -R public/* dist/; fi
-
-      - name: Verify output
-        run: |
-          test -f dist/index.html || (echo "Missing dist/index.html" && exit 1)
-          test -f dist/data/dashboard.json || (echo "Missing dashboard.json" && exit 1)
-
-      - name: Commit history file
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/${fleetSlug}_flight_hours_history.json || true
-          git diff --staged --quiet || git commit -m "Update flight hours history [skip ci]"
-          git push || true
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: \${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-`;
-
-  // ---- README ----
-  const readme = `# ${fleetName} Fleet Maintenance Dashboard
-**${orgName}**
-
-Live dashboard: https://USERNAME.github.io/${repoName}/
-
-## Setup
-
-### 1. Repository structure
-\`\`\`
-${repoName}/
-├── data/
-│   ├── ${dailyCsv}          ← drop daily export here
-│   ${weeklyCsv ? `├── ${weeklyCsv}     ← drop weekly export here` : ""}
-│   └── ${fleetSlug}_flight_hours_history.json  ← auto-generated
-├── public/
-│   └── index.html
-├── src/
-│   └── build_dashboard.py
-└── .github/workflows/build.yml
-\`\`\`
-
-### 2. GitHub Actions permissions
-Settings → Actions → General → Workflow permissions → Read and write
-
-### 3. GitHub Pages
-Settings → Pages → Source: GitHub Actions
-
-### 4. Windows Task Scheduler
-Set up a task to copy your Veryon daily export to \`data/${dailyCsv}\` and run:
-\`\`\`
-python src/build_dashboard.py
-git add .
-git commit -m "Daily update"
-git push
-\`\`\`
-
-## Inspections Tracked
-${inspRows.map(r=>`- **${r.name}** — ATA match: \`${r.match}\` (${r.metric})`).join("\n")}
-
-## Bar Chart
-**${chartTitle}** (${chartMetric === "weeks" ? "weeks remaining" : "hours remaining"})
-`;
-
-  // ---- public/index.html ----
-  // Build ATA match strings and inspection names for JS
-  const inspJS = JSON.stringify(inspRows.map(r=>({name:r.name,match:r.match,metric:r.metric,warn:r.warn,crit:r.crit})));
-  const chartInspJS = JSON.stringify(chartInsp);
-  const chartMetricJS = JSON.stringify(chartMetric);
-  const chartTitleJS = JSON.stringify(chartTitle);
-
-  const indexHtml = buildIndexHtml(fleetName, orgName, repoName, inspJS, chartInspJS, chartMetricJS, chartTitleJS, dailyCsv);
-
-  // ---- Assemble ZIP ----
-  const zip = new JSZip();
-  zip.folder("data").file(".gitkeep","");
-  zip.folder("src").file("build_dashboard.py", buildPy);
-  zip.folder("public").file("index.html", indexHtml);
-  zip.folder(".github").folder("workflows").file("build.yml", workflowYml);
-  zip.file("README.md", readme);
-  zip.file(".gitignore", "node_modules/\n__pycache__/\n*.pyc\ndist/\n");
-
-  generatedZip = zip;
-
-  // Show output panel
-  document.getElementById("output-panel").style.display="block";
-  document.getElementById("output-sub").innerHTML =
-    `Your <b>${fleetName}</b> dashboard is ready.<br>` +
-    `Unzip, push to a new GitHub repo named <code>${repoName}</code>, ` +
-    `drop your CSV into <code>data/</code>, and run the build script.`;
-
-  document.getElementById("file-list").innerHTML = `
-    <div class="file-item"><span class="file-icon">🐍</span><span class="file-name">src/build_dashboard.py</span><span class="file-desc">Veryon CSV → dashboard.json</span></div>
-    <div class="file-item"><span class="file-icon">🌐</span><span class="file-name">public/index.html</span><span class="file-desc">Dashboard frontend</span></div>
-    <div class="file-item"><span class="file-icon">⚙️</span><span class="file-name">.github/workflows/build.yml</span><span class="file-desc">GitHub Actions build + deploy</span></div>
-    <div class="file-item"><span class="file-icon">📁</span><span class="file-name">data/</span><span class="file-desc">Drop your CSV files here</span></div>
-    <div class="file-item"><span class="file-icon">📄</span><span class="file-name">README.md</span><span class="file-desc">Setup instructions</span></div>`;
-
-  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
-}
-
-async function downloadZip(){
-  if(!generatedZip) return;
-  const blob = await generatedZip.generateAsync({type:"blob"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${v("repo-name") || "dashboard"}.zip`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// ===== Build index.html =====
-function buildIndexHtml(fleetName, orgName, repoName, inspJS, chartInspJS, chartMetricJS, chartTitleJS, dailyCsv){
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>${orgName} — ${fleetName} Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"><\/script>
-  <style>
-    :root{--bg:#0a0c0f;--surface:#111418;--surface2:#181c22;--border:#1e2530;--green:#00e676;--amber:#ffab00;--red:#ff1744;--overdue:#ff6d00;--blue:#29b6f6;--text:#cdd6e0;--muted:#4a5568;--heading:#e8edf2;--mono:'Share Tech Mono',monospace;--sans:'Barlow Condensed',sans-serif;--body:'Barlow',sans-serif;--radius:6px;}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;}
-    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);pointer-events:none;z-index:1000;}
-    header{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:16px;}
-    .logo{font-family:var(--sans);font-weight:900;font-size:20px;letter-spacing:3px;color:var(--heading);text-transform:uppercase;line-height:1;}
-    .logo span{color:var(--blue);}
-    .subtitle{margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
-    .header-meta{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;line-height:1.7;white-space:nowrap;}
-    .header-meta .date{color:var(--blue);}
-    main{max-width:1600px;margin:0 auto;padding:22px 28px 40px;}
-    .legend{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:10px 28px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--muted);}
-    .legend-item{display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:1px;}
-    .dot{width:8px;height:8px;border-radius:999px;}
-    .dot-green{background:var(--green);box-shadow:0 0 6px var(--green);}.dot-amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}.dot-red{background:var(--red);box-shadow:0 0 6px var(--red);}.dot-overdue{background:var(--overdue);box-shadow:0 0 6px var(--overdue);}
-    .tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px;flex-wrap:wrap;}
-    .tab-btn{font-family:var(--sans);font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:12px 18px;background:transparent;border:none;color:var(--muted);cursor:pointer;transition:all .15s;border-bottom:3px solid transparent;}
-    .tab-btn:hover{color:var(--text);}
-    .tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
-    .tab-content{display:none;}.tab-content.active{display:block;}
-    .summary-bar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
-    .summary-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;min-width:160px;flex:0 0 auto;}
-    .stat-value{font-family:var(--sans);font-size:30px;font-weight:900;line-height:1;margin-bottom:6px;color:var(--heading);}
-    .stat-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
-    .divider-line{width:42px;height:2px;border-radius:1px;margin:6px 0 8px;background:var(--border);}
-    .section-label{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
-    .chart-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;}
-    .chart-panel-title{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-    .chart-wrap{position:relative;height:280px;}
-    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0 14px;}
-    .search{flex:1 1 280px;min-width:240px;display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;}
-    .search input{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:12px;}
-    .chip-row{display:flex;gap:8px;flex-wrap:wrap;}
-    .chip{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:999px;cursor:pointer;transition:.12s;}
-    .chip:hover{color:var(--text);}
-    .chip.active{background:var(--blue);border-color:var(--blue);color:#000;}
-    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-    .card-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
-    .card-tail{font-family:var(--sans);font-weight:900;font-size:18px;letter-spacing:1px;color:var(--heading);display:flex;align-items:baseline;gap:10px;}
-    .subline{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
-    .badge{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted);white-space:nowrap;flex:0 0 auto;}
-    .b-overdue{color:var(--overdue);border-color:rgba(255,109,0,0.35);background:rgba(255,109,0,0.08);}.b-red{color:var(--red);border-color:rgba(255,23,68,0.35);background:rgba(255,23,68,0.08);}.b-amber{color:var(--amber);border-color:rgba(255,171,0,0.35);background:rgba(255,171,0,0.08);}.b-green{color:var(--green);border-color:rgba(0,230,118,0.35);background:rgba(0,230,118,0.06);}.b-blue{color:var(--blue);border-color:rgba(41,182,246,0.35);background:rgba(41,182,246,0.06);}.b-na{color:var(--muted);}
-    .card-body{padding:12px 14px;}
-    .item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(30,37,48,0.7);}
-    .item:last-child{border-bottom:none;}
-    .bar{width:3px;height:34px;border-radius:2px;flex:0 0 auto;background:var(--border);margin-top:2px;}
-    .bar.overdue{background:var(--overdue);}.bar.red{background:var(--red);}.bar.amber{background:var(--amber);}.bar.green{background:var(--green);}
-    .item-main{min-width:0;flex:1 1 auto;}
-    .item-title{font-family:var(--body);font-size:12px;font-weight:600;color:var(--text);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .item-meta{margin-top:4px;font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;}
-    .mono-pill{border:1px solid rgba(74,85,104,0.35);padding:2px 6px;border-radius:4px;letter-spacing:.5px;text-transform:uppercase;}
-    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);}
-    table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;min-width:760px;}
-    thead th{background:var(--surface2);color:var(--muted);font-family:var(--sans);font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:11px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
-    tbody td{padding:10px 12px;border-bottom:1px solid rgba(30,37,48,0.7);vertical-align:middle;}
-    tbody tr:hover{background:rgba(255,255,255,0.02);}
-    .td-right{text-align:right;}.td-center{text-align:center;}
-    .hrs-bar-wrap{display:flex;align-items:center;gap:8px;}.hrs-bar-bg{flex:1;height:6px;background:var(--border);border-radius:3px;min-width:80px;max-width:160px;}.hrs-bar-fill{height:6px;border-radius:3px;}.hrs-val{font-family:var(--mono);font-size:11px;white-space:nowrap;min-width:44px;text-align:right;}
-    .util-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px;}
-    .util-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-    .util-card-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
-    .util-tail{font-family:var(--sans);font-weight:900;font-size:16px;letter-spacing:1px;color:var(--heading);}
-    .util-stats{display:flex;gap:18px;padding:10px 14px;border-bottom:1px solid var(--border);}
-    .util-stat{text-align:center;}.util-stat-val{font-family:var(--sans);font-size:18px;font-weight:900;color:var(--blue);}.util-stat-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
-    .util-chart-wrap{padding:10px 14px;position:relative;height:140px;}.util-no-data{padding:20px 14px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;}
-    .empty{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:var(--mono);color:var(--muted);font-size:12px;}
-    footer{margin-top:38px;padding:16px 28px;border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;justify-content:space-between;letter-spacing:1px;flex-wrap:wrap;gap:10px;}
-    .errbar{border:1px solid rgba(255,23,68,0.35);background:rgba(255,23,68,0.08);color:var(--red);padding:10px 12px;border-radius:var(--radius);font-family:var(--mono);font-size:12px;margin:14px 0;}
-    /* Merlin */
-    #merlin-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;user-select:none;}
-    #merlin-bubble{display:none;position:absolute;bottom:130px;right:0;background:#0d1117;border:1px solid #29b6f6;border-radius:8px 8px 0 8px;padding:12px 14px;max-width:260px;min-width:180px;font-family:'Share Tech Mono',monospace;font-size:12px;line-height:1.55;color:#cdd6e0;box-shadow:0 0 20px rgba(41,182,246,0.15);}
-  </style>
-</head>
-<body>
-<header>
-  <div>
-    <div class="logo">${orgName.split(" ").slice(0,2).join(" ").toUpperCase().replace(/(\S+)\s(\S+)/,"$1 <span>$2</span>")}</div>
-    <div class="subtitle">${fleetName} Fleet — Inspections &amp; Due List</div>
-  </div>
-  <div class="header-meta">
-    <div class="date" id="hdr-report-date">REPORT DATE: —</div>
-    <div id="hdr-generated">GENERATED: —</div>
-    <div id="hdr-source" style="font-size:10px;color:var(--muted);">SOURCE: data/dashboard.json</div>
-  </div>
-</header>
-<div class="legend">
-  <div class="legend-item"><div class="dot dot-green"></div> OK</div>
-  <div class="legend-item"><div class="dot dot-amber"></div> Coming Due</div>
-  <div class="legend-item"><div class="dot dot-red"></div> Critical</div>
-  <div class="legend-item"><div class="dot dot-overdue"></div> Overdue</div>
-</div>
-<main>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('inspections',this)">Inspections</button>
-    <button class="tab-btn" onclick="switchTab('components',this)">Components</button>
-    <button class="tab-btn" onclick="switchTab('utilization',this)">Utilization</button>
-  </div>
-  <div class="summary-bar">
-    <div class="summary-stat"><div class="stat-value" id="sum-overdue" style="color:var(--overdue)">—</div><div class="divider-line" style="background:var(--overdue)"></div><div class="stat-label">Overdue</div></div>
-    <div class="summary-stat"><div class="stat-value" id="sum-critical" style="color:var(--red)">—</div><div class="divider-line" style="background:var(--red)"></div><div class="stat-label">Critical</div></div>
-    <div class="summary-stat"><div class="stat-value" id="sum-coming" style="color:var(--amber)">—</div><div class="divider-line" style="background:var(--amber)"></div><div class="stat-label">Coming Due</div></div>
-    <div class="summary-stat"><div class="stat-value" id="sum-tracked" style="color:var(--blue)">—</div><div class="divider-line" style="background:var(--blue)"></div><div class="stat-label">Tracked Items</div></div>
-  </div>
-  <div id="error-box" class="errbar" hidden></div>
-  <!-- INSPECTIONS -->
-  <div id="tab-inspections" class="tab-content active">
-    <div class="chart-panel" id="main-chart-panel" hidden>
-      <div class="chart-panel-title" id="main-chart-title">${chartTitleJS.replace(/"/g,'')}</div>
-      <div class="chart-wrap"><canvas id="main-chart"></canvas></div>
-    </div>
-    <div class="toolbar">
-      <div class="search"><span style="color:var(--muted);font-family:var(--mono);font-size:11px;">FILTER</span><input id="q-aircraft" placeholder="Search tail, inspection, ATA…" autocomplete="off" /></div>
-      <div class="chip-row" id="severity-chips">
-        <button class="chip active" onclick="setSeverityFilter('all',this)">All</button>
-        <button class="chip" onclick="setSeverityFilter('overdue',this)">Overdue</button>
-        <button class="chip" onclick="setSeverityFilter('critical',this)">Critical</button>
-        <button class="chip" onclick="setSeverityFilter('coming',this)">Coming</button>
-        <button class="chip" onclick="setSeverityFilter('ok',this)">OK</button>
-      </div>
-    </div>
-    <div class="section-label">Inspections by Aircraft</div>
-    <div id="cards" class="cards"></div>
-    <div id="empty-inspections" class="empty" hidden>No tracked inspection items found.</div>
-  </div>
-  <!-- COMPONENTS -->
-  <div id="tab-components" class="tab-content">
-    <div class="toolbar">
-      <div class="search"><span style="color:var(--muted);font-family:var(--mono);font-size:11px;">FILTER</span><input id="q-comp" placeholder="Search tail, component, ATA…" autocomplete="off" /></div>
-      <div class="chip-row" id="comp-window-chips">
-        <button class="chip active" onclick="setCompWindow(200,this)">≤200 hrs</button>
-        <button class="chip" onclick="setCompWindow(100,this)">≤100 hrs</button>
-        <button class="chip" onclick="setCompWindow(50,this)">≤50 hrs</button>
-        <button class="chip" onclick="setCompWindow(9999,this)">All</button>
-      </div>
-    </div>
-    <div class="section-label">Components Due Retire / Overhaul</div>
-    <div class="table-wrap"><table><thead><tr><th>Aircraft</th><th>ATA</th><th>Component</th><th>Type</th><th class="td-right">Hours Remaining</th></tr></thead><tbody id="comp-tbody"></tbody></table></div>
-    <div id="empty-comp" class="empty" hidden style="margin-top:12px;">No components found within selected window.</div>
-  </div>
-  <!-- UTILIZATION -->
-  <div id="tab-utilization" class="tab-content">
-    <div class="section-label">Fleet Utilization — Daily Flight Hours</div>
-    <div id="util-grid" class="util-grid"></div>
-    <div id="empty-util" class="empty" hidden>No utilization data available yet.</div>
-  </div>
-</main>
 <footer>
-  <span>${orgName} — ${fleetName} Dashboard</span>
-  <span id="ftr-right">—</span>
+  <span>IHC Health Services — Flight Operations</span>
+  <span class="footer-clock" id="clock"></span>
 </footer>
-<!-- Merlin -->
+
 <div id="merlin-wrap">
-  <div id="merlin-bubble"><div id="merlin-text"></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;" id="merlin-btns"></div></div>
-  <div id="merlin-fallback" style="width:80px;height:80px;background:var(--surface);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;" onclick="merlinClick()">🧙</div>
+  <div id="merlin-bubble"><div id="merlin-text"></div><button id="merlin-dismiss" onclick="merlinDismiss()">Got it.</button></div>
+  <div id="merlin-btn" onclick="merlinToggle()">🧙</div>
 </div>
+
 <script>
-Chart.register(ChartDataLabels);
-const DASHBOARD_URL = "data/dashboard.json";
-const INSPECTIONS = ${inspJS};
-const CHART_INSP  = ${chartInspJS};
-const CHART_METRIC = ${chartMetricJS};
-let DASH = null;
-let RAW_COMP = [];
-let severityFilter = "all";
-let compWindow = 200;
-let mainChart = null;
-const utilCharts = {};
-let currentUtterance = null;
-let merlinQueueItems = [], merlinQueueIndex = 0;
+// Clock
+function updateClock(){
+  const now = new Date();
+  document.getElementById("clock").textContent = now.toUTCString().replace("GMT","UTC");
+}
+updateClock();
+setInterval(updateClock, 1000);
 
-function switchTab(name,btn){
-  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.querySelectorAll(".tab-content").forEach(t=>t.classList.remove("active"));
-  document.getElementById("tab-"+name).classList.add("active");
-  if(name==="utilization") renderUtilization();
-  if(name==="components")  renderComponents();
-}
-function safeStr(x){return(x===null||x===undefined)?"":String(x);}
-function fmtDate(d){if(!d)return"—";const dt=new Date(d+"T00:00:00");if(isNaN(dt))return"—";return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");}
-function normalizeItems(dash){const out=[];if(!Array.isArray(dash.aircraft))return out;dash.aircraft.forEach(a=>{const tail=a.tail||"";const tt=a.airframe_hours;(a.items||[]).forEach(it=>out.push({tail,total_time:tt,...it}));});return out;}
-function classifyItem(item){
-  const d=item.remaining_days;
-  if(d!==null&&d!==undefined&&d!==""&&!isNaN(Number(d))){const v=Number(d);if(v<0)return"overdue";if(v<=7)return"critical";if(v<=30)return"coming";return"ok";}
-  const h=item.remaining_hours;
-  if(h!==null&&h!==undefined&&h!==""&&!isNaN(Number(h))){const v=Number(h);if(v<0)return"overdue";if(v<=25)return"critical";if(v<=100)return"coming";return"ok";}
-  const s=safeStr(item.status||item.next_due_status).toUpperCase();
-  if(s.includes("PAST DUE")||s.includes("OVERDUE"))return"overdue";
-  if(s.includes("CRITICAL"))return"critical";
-  if(s.includes("COMING"))return"coming";
-  if(s.includes("OK"))return"ok";
-  return"na";
-}
-function scoreItem(item){const sev=classifyItem(item);const d=Number(item.remaining_days);const h=Number(item.remaining_hours);if(sev==="overdue")return!isNaN(d)?-100000+d:!isNaN(h)?-90000+h:-80000;if(sev==="critical")return!isNaN(d)?d:!isNaN(h)?2000+h:5000;if(sev==="coming")return!isNaN(d)?10000+d:!isNaN(h)?14000+h:18000;if(sev==="ok")return!isNaN(d)?20000+d:!isNaN(h)?24000+h:28000;return 99999;}
-function badgeFor(sev){if(sev==="overdue")return'<span class="badge b-overdue">OVERDUE</span>';if(sev==="critical")return'<span class="badge b-red">CRITICAL</span>';if(sev==="coming")return'<span class="badge b-amber">COMING</span>';if(sev==="ok")return'<span class="badge b-green">OK</span>';return'<span class="badge b-na">—</span>';}
-function barClass(sev){return{overdue:"overdue",critical:"red",coming:"amber",ok:"green"}[sev]||"";}
-function classifyHours(h){if(h===null||h===undefined||isNaN(h))return"na";if(h<0)return"overdue";if(h<=25)return"critical";if(h<=100)return"coming";return"ok";}
-function renderSummary(items){let overdue=0,critical=0,coming=0,tracked=0;items.forEach(it=>{const sev=classifyItem(it);if(sev==="na")return;tracked++;if(sev==="overdue")overdue++;else if(sev==="critical")critical++;else if(sev==="coming")coming++;});document.getElementById("sum-overdue").textContent=overdue;document.getElementById("sum-critical").textContent=critical;document.getElementById("sum-coming").textContent=coming;document.getElementById("sum-tracked").textContent=tracked;}
-function updateHeader(meta){document.getElementById("hdr-report-date").textContent="REPORT DATE: "+(meta?.report_date||"—");document.getElementById("hdr-generated").textContent="GENERATED: "+(meta?.generated_utc||"—");document.getElementById("ftr-right").textContent="Last update: "+(meta?.generated_utc||"—");}
-function renderMainChart(items){
-  const chartItems = items.filter(it=>safeStr(it.inspection).toUpperCase().includes(CHART_INSP.toUpperCase())).filter(it=>{
-    if(CHART_METRIC==="weeks") return it.remaining_days!==null&&it.remaining_days!==undefined&&!isNaN(Number(it.remaining_days));
-    return it.remaining_hours!==null&&it.remaining_hours!==undefined&&!isNaN(Number(it.remaining_hours));
-  });
-  const panel=document.getElementById("main-chart-panel");
-  if(!chartItems.length){panel.hidden=true;return;}
-  panel.hidden=false;
-  chartItems.sort((a,b)=>CHART_METRIC==="weeks"?Number(a.remaining_days)-Number(b.remaining_days):Number(a.remaining_hours)-Number(b.remaining_hours));
-  const labels=chartItems.map(it=>it.tail);
-  const vals=chartItems.map(it=>CHART_METRIC==="weeks"?parseFloat((Number(it.remaining_days)/7).toFixed(1)):parseFloat(Number(it.remaining_hours).toFixed(1)));
-  const colors=vals.map(v=>v<0?"rgba(255,109,0,0.85)":v<=(CHART_METRIC==="weeks"?1:25)?"rgba(255,23,68,0.85)":v<=(CHART_METRIC==="weeks"?4:100)?"rgba(255,171,0,0.85)":"rgba(41,182,246,0.7)");
-  if(mainChart){mainChart.destroy();mainChart=null;}
-  const ctx=document.getElementById("main-chart").getContext("2d");
-  mainChart=new Chart(ctx,{type:"bar",data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{color:"#cdd6e0",font:{family:"'Share Tech Mono',monospace",size:10},anchor:"end",align:"right",formatter:v=>v<0?(CHART_METRIC==="weeks"?Math.abs(v).toFixed(1)+"w OVERDUE":Math.abs(v).toFixed(0)+"h OVERDUE"):(CHART_METRIC==="weeks"?v+"w":v+"h")},tooltip:{callbacks:{label:ctx=>CHART_METRIC==="weeks"?" "+Math.round(ctx.parsed.x*7)+" days ("+ctx.parsed.x+"w)":" "+ctx.parsed.x+" hours"}}},scales:{x:{grid:{color:"rgba(30,37,48,0.6)"},ticks:{color:"#4a5568",font:{family:"'Share Tech Mono',monospace",size:9},callback:v=>CHART_METRIC==="weeks"?v+"w":v+"h"},title:{display:true,text:CHART_METRIC==="weeks"?"Weeks Remaining":"Hours Remaining",color:"#4a5568",font:{family:"'Barlow Condensed',sans-serif",size:11,weight:"700"}}},y:{grid:{display:false},ticks:{color:"#cdd6e0",font:{family:"'Share Tech Mono',monospace",size:11}}}},layout:{padding:{right:80}}},plugins:[ChartDataLabels]});
-}
-function setSeverityFilter(val,btn){severityFilter=val;document.querySelectorAll("#severity-chips .chip").forEach(c=>c.classList.remove("active"));btn.classList.add("active");renderInspections();}
-function renderInspections(){
-  const all=normalizeItems(DASH);const q=document.getElementById("q-aircraft").value.trim().toLowerCase();
-  const filtered=all.filter(it=>{const sev=classifyItem(it);if(severityFilter!=="all"&&severityFilter!==sev)return false;if(!q)return true;return[it.tail,it.inspection,it.ata,it.status,it.due_date].map(safeStr).join(" ").toLowerCase().includes(q);});
-  const cards=document.getElementById("cards");cards.innerHTML="";
-  const byTail=new Map();filtered.forEach(it=>{const t=safeStr(it.tail)||"UNKNOWN";if(!byTail.has(t))byTail.set(t,[]);byTail.get(t).push(it);});
-  const tails=Array.from(byTail.keys()).sort((a,b)=>{const sa=Math.min(...byTail.get(a).map(scoreItem));const sb=Math.min(...byTail.get(b).map(scoreItem));return sa-sb||a.localeCompare(b);});
-  document.getElementById("empty-inspections").hidden=!!tails.length;
-  tails.forEach(tail=>{const list=byTail.get(tail).slice().sort((x,y)=>scoreItem(x)-scoreItem(y));const sevTop=classifyItem(list[0]);const tt=list[0].total_time;
-    const rows=list.slice(0,12).map(it=>{const sev=classifyItem(it);const insp=safeStr(it.inspection||"Inspection");const ata=safeStr(it.ata||"—");const due=fmtDate(it.due_date);const d=(it.remaining_days!==null&&it.remaining_days!==undefined&&!isNaN(Number(it.remaining_days)))?Number(it.remaining_days):null;const h=(it.remaining_hours!==null&&it.remaining_hours!==undefined&&!isNaN(Number(it.remaining_hours)))?Number(it.remaining_hours):null;const metric=d!==null?d+"d":h!==null?h.toFixed(1)+"h":safeStr(it.status||"—").slice(0,18);const meta=[];if(ata&&ata!=="—")meta.push('<span class="mono-pill">ATA '+ata+'</span>');if(due!=="—")meta.push('<span class="mono-pill">DUE '+due+'</span>');meta.push('<span class="mono-pill">'+metric+'</span>');return'<div class="item"><div class="bar '+barClass(sev)+'"></div><div class="item-main"><div class="item-title" title="'+insp+'">'+insp+'</div><div class="item-meta">'+meta.join(" ")+'</div></div>'+badgeFor(sev)+'</div>';}).join("");
-    const card=document.createElement("div");card.className="card";card.innerHTML='<div class="card-header"><div class="card-tail"><span>'+tail+'</span><span class="subline">'+(tt?Number(tt).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1})+" TT":"")+'</span></div>'+badgeFor(sevTop)+'</div><div class="card-body">'+rows+'</div>';cards.appendChild(card);});
-}
-function setCompWindow(w,btn){compWindow=w;document.querySelectorAll("#comp-window-chips .chip").forEach(c=>c.classList.remove("active"));btn.classList.add("active");renderComponents();}
-function renderComponents(){
-  const q=document.getElementById("q-comp").value.trim().toLowerCase();
-  const filtered=RAW_COMP.filter(c=>{const h=Number(c.remaining_hours);if(compWindow<9999&&(!isFinite(h)||h>compWindow))return false;if(!q)return true;return[c.tail,c.ata,c.description,c.item_type].map(safeStr).join(" ").toLowerCase().includes(q);}).sort((a,b)=>{const ha=isFinite(Number(a.remaining_hours))?Number(a.remaining_hours):99999;const hb=isFinite(Number(b.remaining_hours))?Number(b.remaining_hours):99999;return ha-hb||a.tail.localeCompare(b.tail);});
-  const tbody=document.getElementById("comp-tbody");tbody.innerHTML="";document.getElementById("empty-comp").hidden=!!filtered.length;if(!filtered.length)return;
-  const maxH=Math.max(200,...filtered.map(c=>Number(c.remaining_hours)||0));
-  filtered.forEach(c=>{const h=isFinite(Number(c.remaining_hours))?Number(c.remaining_hours):null;const sev=classifyHours(h);const pct=h!==null?Math.min(100,Math.max(0,(h/maxH)*100)):0;const color={overdue:"var(--overdue)",critical:"var(--red)",coming:"var(--amber)",ok:"var(--green)"}[sev]||"var(--muted)";const hStr=h!==null?h.toFixed(1):"—";const desc=safeStr(c.description).toUpperCase();const label=desc.includes("RETIRE")?"RETIRE":desc.includes("OVERHAUL")?"OVERHAUL":desc.includes("LIMIT")?"LIMIT":safeStr(c.item_type);const badgeCls={RETIRE:"b-overdue",OVERHAUL:"b-amber",LIMIT:"b-red"}[label]||"b-blue";const tr=document.createElement("tr");tr.innerHTML='<td><span class="mono-pill">'+c.tail+'</span></td><td><span class="mono-pill">'+(safeStr(c.ata)||"—")+'</span></td><td style="max-width:340px;white-space:normal;line-height:1.3;">'+safeStr(c.description)+'</td><td class="td-center"><span class="badge '+badgeCls+'">'+label+'</span></td><td class="td-right"><div class="hrs-bar-wrap"><div class="hrs-bar-bg"><div class="hrs-bar-fill" style="width:'+pct+'%;background:'+color+';"></div></div><span class="hrs-val" style="color:'+color+'">'+hStr+' hrs</span></div></td>';tbody.appendChild(tr);});
-}
-function renderUtilization(){
-  const grid=document.getElementById("util-grid");grid.innerHTML="";Object.values(utilCharts).forEach(c=>c.destroy());Object.keys(utilCharts).forEach(k=>delete utilCharts[k]);
-  const aircraft=DASH?.aircraft||[];const withData=aircraft.filter(a=>Array.isArray(a.daily_data)&&a.daily_data.length>=2).sort((a,b)=>a.tail.localeCompare(b.tail));const noData=aircraft.filter(a=>!Array.isArray(a.daily_data)||a.daily_data.length<2);
-  document.getElementById("empty-util").hidden=!!(withData.length||noData.length);
-  withData.forEach(ac=>{const avg=ac.avg_daily;const tt=ac.airframe_hours;const data=ac.daily_data;const labels=[],bars=[];for(let i=1;i<data.length;i++){labels.push(data[i].date.slice(5));bars.push(parseFloat(Math.max(0,data[i].hours-data[i-1].hours).toFixed(2)));}
-    const avgStr=avg!=null?avg.toFixed(2)+" hrs/day":"—";const ttStr=tt!=null?Number(tt).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1}):"—";const wkStr=ac.projection_weekly!=null?ac.projection_weekly.toFixed(1):"—";const canvasId="chart-"+ac.tail.replace(/\\W/g,"_");
-    const card=document.createElement("div");card.className="util-card";card.innerHTML='<div class="util-card-header"><span class="util-tail">'+ac.tail+'</span><span class="subline">'+ttStr+' TT</span></div><div class="util-stats"><div class="util-stat"><div class="util-stat-val">'+avgStr+'</div><div class="util-stat-lbl">Avg Daily</div></div><div class="util-stat"><div class="util-stat-val">'+wkStr+' hrs</div><div class="util-stat-lbl">Proj Weekly</div></div><div class="util-stat"><div class="util-stat-val">'+data.length+'</div><div class="util-stat-lbl">Data Points</div></div></div>'+(bars.length?'<div class="util-chart-wrap"><canvas id="'+canvasId+'"></canvas></div>':'<div class="util-no-data">Insufficient data</div>');
-    grid.appendChild(card);
-    if(bars.length){const ctx=document.getElementById(canvasId).getContext("2d");utilCharts[canvasId]=new Chart(ctx,{type:"bar",data:{labels,datasets:[{data:bars,backgroundColor:bars.map(v=>v<=0?"rgba(74,85,104,0.3)":v>=5?"rgba(0,230,118,0.7)":"rgba(41,182,246,0.7)"),borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{color:"#cdd6e0",font:{family:"'Share Tech Mono',monospace",size:9},anchor:"end",align:"top",formatter:v=>v>0?v.toFixed(1):""},tooltip:{callbacks:{label:ctx=>" "+ctx.parsed.y.toFixed(2)+" hrs"}}},scales:{x:{grid:{color:"rgba(30,37,48,0.6)"},ticks:{color:"#4a5568",font:{family:"'Share Tech Mono',monospace",size:9}}},y:{grid:{color:"rgba(30,37,48,0.6)"},ticks:{color:"#4a5568",font:{family:"'Share Tech Mono',monospace",size:9}},beginAtZero:true}}},plugins:[ChartDataLabels]});}});
-  if(noData.length){const s=document.createElement("div");s.className="section-label";s.style.marginTop="24px";s.textContent="Insufficient History";grid.appendChild(s);const row=document.createElement("div");row.style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;";noData.forEach(ac=>{const p=document.createElement("span");p.className="mono-pill";p.style="font-family:var(--mono);font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;color:var(--muted);";p.textContent=ac.tail;row.appendChild(p);});grid.appendChild(row);}
-}
 // Merlin
-const MERLIN_LINES={
-  greeting:["Oh. You opened the dashboard. Congratulations. Let me tell you what you've already missed.","Welcome back. I've been sitting here watching these numbers get worse. Hope you had a nice break.","Merlin here. I've memorized every overdue item on this fleet. Would you like to feel bad about that? Click me."],
-  overdue:(tail,insp)=>tail+" is overdue on the "+insp+". It was overdue yesterday too. And the day before. Just thought you should know.",
-  critical:(tail,insp,days)=>tail+" has "+days+" days until the "+insp+". "+days+" days. That's not a lot of days. I'm not panicking. You should be panicking.",
-  allGood:"Nothing is critically overdue right now. Don't worry, I'm sure that won't last.",
-  components:(tail,desc,hrs)=>tail+" has "+hrs.toFixed(0)+" hours left on the "+desc+". "+hrs.toFixed(0)+". I'll just leave that there.",
-  manyIssues:n=>"There are "+n+" items requiring attention. "+n+". I've counted them several times hoping the number would change. It hasn't.",
-  idle:["Still here. Still watching. The Components tab has things you probably don't want to see.","I computed the fleet utilization again. For fun. I need you to look at it.","Have you checked the Components tab lately? No? Interesting choice.","I'm not saying anyone is behind on maintenance. I'm just saying I have concerns."],
-};
-function merlinTTS(text){if(typeof speechSynthesis==="undefined")return;speechSynthesis.cancel();function speak(){const utter=new SpeechSynthesisUtterance(text);const voices=speechSynthesis.getVoices();const preferred=voices.find(v=>v.name==="Microsoft David Desktop - English (United States)")||voices.find(v=>v.name.includes("David"))||voices.find(v=>v.name.includes("Mark"))||voices.find(v=>v.lang==="en-US")||voices[0];if(preferred)utter.voice=preferred;utter.rate=0.68;utter.pitch=0.55;utter.volume=1.0;currentUtterance=utter;speechSynthesis.speak(utter);}if(speechSynthesis.getVoices().length){speak();}else{speechSynthesis.onvoiceschanged=()=>{speechSynthesis.onvoiceschanged=null;speak();};}}
-function merlinSpeak(text,opts={}){const bubble=document.getElementById("merlin-bubble");const textEl=document.getElementById("merlin-text");const btnsEl=document.getElementById("merlin-btns");if(currentUtterance){currentUtterance.pause&&currentUtterance.pause();currentUtterance=null;}bubble.style.display="block";btnsEl.innerHTML="";textEl.textContent="";let i=0;const interval=setInterval(()=>{textEl.textContent+=text[i]||"";i++;if(i>=text.length){clearInterval(interval);const btn=document.createElement("button");btn.textContent="Got it.";btn.style.cssText="background:transparent;border:1px solid #29b6f6;color:#29b6f6;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;";btn.onclick=merlinDismiss;btnsEl.appendChild(btn);if(opts.more){const btn2=document.createElement("button");btn2.textContent="Tell me more";btn2.style.cssText="background:transparent;border:1px solid rgba(41,182,246,0.4);color:#4a5568;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;";btn2.onclick=opts.more;btnsEl.appendChild(btn2);}}},28);merlinTTS(text);if(!opts.persist)setTimeout(()=>{if(bubble.style.display!=="none")merlinDismiss();},Math.max(6000,text.length*60));}
-function merlinDismiss(){document.getElementById("merlin-bubble").style.display="none";if(currentUtterance){currentUtterance.pause&&currentUtterance.pause();currentUtterance=null;}}
-function merlinClick(){if(document.getElementById("merlin-bubble").style.display!=="none"){merlinDismiss();return;}merlinBriefing();}
-document.getElementById("merlin-fallback").onclick=merlinClick;
-function buildMerlinQueue(){if(!DASH)return["The data isn't loaded yet. I've been waiting."];const items=[];(DASH.aircraft||[]).forEach(a=>{(a.items||[]).forEach(it=>items.push({tail:a.tail,...it}));});const overdue=items.filter(it=>(it.remaining_days!==null&&Number(it.remaining_days)<0)||it.status==="OVERDUE");const critical=items.filter(it=>{const d=Number(it.remaining_days);return!isNaN(d)&&d>=0&&d<=7;});const comp50=(DASH.components||[]).filter(c=>c.remaining_hours<=50);const queue=[];const totalBad=overdue.length+critical.length;if(totalBad>=3)queue.push(MERLIN_LINES.manyIssues(totalBad));overdue.forEach(o=>queue.push(MERLIN_LINES.overdue(o.tail,o.inspection)));critical.forEach(c=>queue.push(MERLIN_LINES.critical(c.tail,c.inspection,Number(c.remaining_days))));comp50.forEach(comp=>queue.push(MERLIN_LINES.components(comp.tail,comp.description,comp.remaining_hours)));if(!queue.length)queue.push(MERLIN_LINES.allGood);return queue;}
-function merlinBriefing(){if(merlinQueueIndex>0&&merlinQueueIndex<merlinQueueItems.length){const text=merlinQueueItems[merlinQueueIndex++];const hasMore=merlinQueueIndex<merlinQueueItems.length;merlinSpeak(text,{more:hasMore?merlinBriefing:null});return;}merlinQueueItems=buildMerlinQueue();merlinQueueIndex=0;const text=merlinQueueItems[merlinQueueIndex++];const hasMore=merlinQueueIndex<merlinQueueItems.length;merlinSpeak(text,{more:hasMore?merlinBriefing:null});}
-setInterval(()=>{if(document.getElementById("merlin-bubble").style.display==="none"){const line=MERLIN_LINES.idle[Math.floor(Math.random()*MERLIN_LINES.idle.length)];merlinSpeak(line);}},3*60*1000);
-async function loadDashboard(){const errorBox=document.getElementById("error-box");errorBox.hidden=true;try{const res=await fetch(DASHBOARD_URL+"?t="+Date.now(),{cache:"no-store"});if(!res.ok)throw new Error("HTTP "+res.status);DASH=await res.json();RAW_COMP=Array.isArray(DASH.components)?DASH.components:[];updateHeader(DASH.meta||{});const items=normalizeItems(DASH);renderSummary(items);renderMainChart(items);renderInspections();}catch(err){console.error(err);errorBox.hidden=false;errorBox.innerHTML='<div style="font-weight:700;margin-bottom:6px;">Dashboard load failed</div><div>Could not load '+DASHBOARD_URL+'</div>';}}
-document.getElementById("q-aircraft").addEventListener("input",()=>renderInspections());
-document.getElementById("q-comp").addEventListener("input",()=>renderComponents());
-loadDashboard();
-<\/script>
-</body>
-</html>`;
+const LINES = [
+  "Two dashboards. One tool. Merlin is watching all of it.",
+  "The Bell 407 Components tab has things in it. Just saying.",
+  "Have you checked the AW109 fleet today? I have. Several times.",
+  "The dashboard generator works. Merlin tested it. Merlin has opinions about the output.",
+  "Everything appears to be operational. Merlin finds this suspicious.",
+  "If you're here, something probably needs attention. It usually does.",
+];
+let shown = false;
+function merlinToggle(){
+  const b = document.getElementById("merlin-bubble");
+  if(shown){ merlinDismiss(); return; }
+  const line = LINES[Math.floor(Math.random()*LINES.length)];
+  document.getElementById("merlin-text").textContent = line;
+  b.style.display = "block";
+  shown = true;
 }
-
-updateProgress();
+function merlinDismiss(){
+  document.getElementById("merlin-bubble").style.display = "none";
+  shown = false;
+}
+// Random idle quip every 4 minutes
+setInterval(()=>{
+  if(!shown) merlinToggle();
+}, 4*60*1000);
 </script>
 </body>
 </html>
