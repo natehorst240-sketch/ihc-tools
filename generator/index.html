@@ -6,6 +6,7 @@
 <title>Veryon Dashboard Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.13/dist/modules/libsodium-wrappers.min.js"></script>
 <style>
 :root{
   --bg:#07090c;--surface:#0e1117;--surface2:#141820;--surface3:#1a202b;
@@ -104,6 +105,11 @@ select option{background:var(--surface2);}
 .btn-next:disabled{background:var(--muted);cursor:not-allowed;}
 .btn-generate{font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:16px 40px;background:var(--green);border:none;border-radius:var(--radius);color:#000;cursor:pointer;transition:.12s;box-shadow:0 0 30px rgba(0,230,118,0.2);}
 .btn-generate:hover{background:#69f0ae;box-shadow:0 0 40px rgba(0,230,118,0.35);}
+.btn-deploy-toggle{font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:16px 32px;background:transparent;border:2px solid var(--blue);border-radius:var(--radius);color:var(--blue);cursor:pointer;transition:.12s;}
+.btn-deploy-toggle:hover{background:rgba(41,182,246,0.1);}
+.btn-deploy{font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:14px 36px;background:var(--blue);border:none;border-radius:var(--radius);color:#000;cursor:pointer;transition:.12s;box-shadow:0 0 30px rgba(41,182,246,0.2);}
+.btn-deploy:hover{background:#4fc3f7;box-shadow:0 0 40px rgba(41,182,246,0.35);}
+.btn-deploy:disabled{background:var(--muted);cursor:not-allowed;box-shadow:none;}
 
 /* ---- Review panel ---- */
 .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
@@ -192,6 +198,11 @@ select option{background:var(--surface2);}
       <label><b>Veryon Export Source Path</b> (optional — for sync script)</label>
       <input type="text" id="export-src" placeholder="e.g. C:\Users\dispatch\Downloads\412_daily_due_list.csv" />
       <div class="field-hint">Where Veryon saves the daily export on the Windows machine. Used in the generated <code>sync.ps1</code> automation script.</div>
+    </div>
+    <div class="field">
+      <label><b>Veryon Due List URL</b> (optional — for GitHub Actions auto-fetch)</label>
+      <input type="text" id="veryon-url" placeholder="e.g. https://app.veryon.com/tracking/due-list?fleet=412" />
+      <div class="field-hint">Paste the Veryon URL right before you click Export. The generated Playwright script navigates here, logs in, clicks Export, and saves the CSV on a daily schedule in GitHub Actions — no manual steps needed.</div>
     </div>
     <div class="nav-row">
       <div></div>
@@ -305,7 +316,58 @@ select option{background:var(--surface2);}
     </div>
     <div id="generate-row" class="nav-row">
       <button class="btn-back" onclick="prevStep(5)">← Back</button>
-      <button class="btn-generate" onclick="generate()">⚡ Generate Dashboard</button>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button class="btn-generate" onclick="generate()">⚡ Download ZIP</button>
+        <button class="btn-deploy-toggle" onclick="toggleDeployPanel()">🚀 Deploy to GitHub</button>
+      </div>
+    </div>
+
+    <!-- ===== Deploy Panel ===== -->
+    <div id="deploy-panel" style="display:none;margin-top:28px;">
+      <div class="divider"></div>
+      <div class="section-title"><span style="color:var(--green);">⚡</span> Deploy to GitHub</div>
+      <div class="field-hint" style="margin-bottom:20px;line-height:1.7;">
+        Fills out the repo automatically under your account. Coworkers fill in the form above — you hit Go Live. The repo is created private, GitHub Actions handles all CSV fetching and deployments, and the dashboard goes live on GitHub Pages. <b>Only you can push to the repo.</b>
+      </div>
+
+      <div class="section-title" style="font-size:10px;margin-bottom:14px;"><span>GH</span> GitHub</div>
+      <div class="field">
+        <label><b>GitHub Personal Access Token</b></label>
+        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" oninput="ghTokenChanged()" />
+        <div class="field-hint">Needs scopes: <code>repo</code>, <code>workflow</code>. <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=IHC+Dashboard+Deploy" target="_blank" style="color:var(--blue);">Generate one here →</a><br>Token is saved to this browser only — never sent anywhere except api.github.com.</div>
+      </div>
+      <div class="field" style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="gh-remember" style="width:auto;accent-color:var(--blue);" />
+        <label style="display:inline;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0;text-transform:none;">Remember token on this device</label>
+      </div>
+      <div id="gh-user-display" style="display:none;font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:16px;"></div>
+
+      <div class="section-title" style="font-size:10px;margin-bottom:14px;"><span>VR</span> Veryon Credentials <span style="font-size:9px;color:var(--muted);font-weight:400;">— stored as encrypted GitHub secrets, never in repo</span></div>
+      <div class="row2">
+        <div class="field">
+          <label><b>Veryon Username</b></label>
+          <input type="text" id="vy-user" placeholder="your.email@ihchealth.org" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label><b>Veryon Password</b></label>
+          <input type="password" id="vy-pass" placeholder="••••••••" autocomplete="off" />
+        </div>
+      </div>
+      <div class="field-hint" style="margin-bottom:20px;">Credentials are encrypted with your repo's public key and stored as GitHub Actions secrets — they are never written to the repository files.</div>
+
+      <div id="deploy-err" class="errbox" style="display:none;"></div>
+      <div id="deploy-log" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:16px;max-height:220px;overflow-y:auto;"></div>
+
+      <div id="deploy-success" style="display:none;" class="output-panel">
+        <div class="output-icon">🚀</div>
+        <div class="output-title" style="color:var(--green);">Live!</div>
+        <div class="output-sub" id="deploy-success-msg"></div>
+        <a id="deploy-pages-link" href="#" target="_blank" class="btn-download" style="display:inline-flex;text-decoration:none;">🌐 Open Dashboard</a>
+      </div>
+
+      <div id="deploy-btn-row" class="nav-row" style="justify-content:flex-end;">
+        <button class="btn-deploy" id="btn-go-live" onclick="deployToGitHub()">🚀 Go Live</button>
+      </div>
     </div>
   </div>
 
@@ -588,7 +650,14 @@ function buildReview(){
     <div class="review-card">
       <div class="review-card-title">Chart Metric</div>
       <div class="review-val">${chartMetric === "weeks" ? "Weeks Remaining" : "Hours Remaining"}</div>
-    </div>`;
+    </div>
+    ${v("veryon-url") ? `<div class="review-card" style="grid-column:1/-1;">
+      <div class="review-card-title">Veryon Export URL <span class="tag tag-green" style="vertical-align:middle;margin-left:6px;">Auto-fetch configured</span></div>
+      <div class="review-val" style="font-size:11px;word-break:break-all;font-family:var(--mono);">${v("veryon-url")}</div>
+    </div>` : `<div class="review-card" style="grid-column:1/-1;border-color:rgba(255,171,0,0.3);">
+      <div class="review-card-title">Veryon Export URL</div>
+      <div class="review-val" style="font-size:12px;color:var(--amber);">Not set — CSV fetch will not be automated</div>
+    </div>`}`;
 }
 
 // ===== Code generation =====
@@ -601,6 +670,7 @@ function generate(){
   const dailyCsv    = v("daily-csv");
   const weeklyCsv   = v("weekly-csv");
   const exportSrc   = v("export-src");
+  const veryonUrl   = v("veryon-url");
   const inspRows    = getInspRows();
   const chartInsp   = document.querySelector('input[name="chart-insp"]:checked')?.value;
   const chartTitle  = v("chart-title");
@@ -1085,6 +1155,195 @@ if ($status) {
 Log "=== Sync complete ==="
 `;
 
+  // ---- playwright/fetch_csv.js ----
+  const fetchCsvJs = `// fetch_csv.js — ${fleetName} Veryon Due List Exporter
+// Auto-generated by IHC Dashboard Generator
+// Runs in GitHub Actions on a daily schedule via fetch-csv.yml
+//
+// Environment variables (set as GitHub Actions secrets):
+//   VERYON_URL      — full URL of the Veryon due list right before clicking Export
+//   VERYON_USER     — Veryon login email / username
+//   VERYON_PASS     — Veryon password
+//   OUTPUT_FILENAME — CSV filename to save (default: ${dailyCsv})
+
+const { chromium } = require('playwright');
+const path = require('path');
+const fs   = require('fs');
+
+const VERYON_URL     = process.env.VERYON_URL;
+const VERYON_USER    = process.env.VERYON_USER;
+const VERYON_PASS    = process.env.VERYON_PASS;
+const OUTPUT_FILE    = path.join(__dirname, '..', 'data', process.env.OUTPUT_FILENAME || '${dailyCsv}');
+
+if (!VERYON_URL || !VERYON_USER || !VERYON_PASS) {
+  console.error('Missing required env vars: VERYON_URL, VERYON_USER, VERYON_PASS');
+  process.exit(1);
+}
+
+(async () => {
+  console.log('[fetch_csv] Starting Playwright...');
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ acceptDownloads: true });
+  const page    = await context.newPage();
+
+  // Navigate to the due list URL
+  console.log('[fetch_csv] Navigating to:', VERYON_URL);
+  await page.goto(VERYON_URL, { waitUntil: 'networkidle', timeout: 60000 });
+
+  // If redirected to a login page, authenticate and return
+  const currentUrl = page.url();
+  if (
+    currentUrl.includes('login') ||
+    currentUrl.includes('signin') ||
+    currentUrl.includes('/auth') ||
+    currentUrl.includes('account/login')
+  ) {
+    console.log('[fetch_csv] Login required — authenticating...');
+
+    // Fill username/email
+    await page.locator(
+      'input[type="email"], input[name="email"], input[name="username"], input[name="Email"], #username, #Email'
+    ).first().fill(VERYON_USER);
+
+    // Fill password
+    await page.locator(
+      'input[type="password"], input[name="password"], input[name="Password"], #password, #Password'
+    ).first().fill(VERYON_PASS);
+
+    // Submit
+    await page.locator(
+      'button[type="submit"], input[type="submit"], .login-btn, .btn-login, #login-button, #btnLogin'
+    ).first().click();
+
+    await page.waitForNavigation({ waitUntil: 'networkidle', timeout: 60000 });
+    console.log('[fetch_csv] Authenticated. Current URL:', page.url());
+
+    // If we landed somewhere other than the target, navigate there now
+    if (!page.url().startsWith(VERYON_URL.split('?')[0])) {
+      console.log('[fetch_csv] Re-navigating to due list...');
+      await page.goto(VERYON_URL, { waitUntil: 'networkidle', timeout: 60000 });
+    }
+  }
+
+  console.log('[fetch_csv] Page ready. Looking for Export button...');
+  await page.waitForLoadState('networkidle');
+
+  // Locate the Export / Download / CSV button
+  const exportBtn = page.locator(
+    'button:has-text("Export"), button:has-text("Download"), button:has-text("CSV"), ' +
+    'a:has-text("Export"), a:has-text("Download CSV"), a:has-text("Export CSV"), ' +
+    '[data-action="export"], [data-testid*="export"], ' +
+    '.export-btn, #export-btn, #btnExport, ' +
+    '[aria-label*="export" i], [aria-label*="download csv" i], [title*="export" i]'
+  ).first();
+
+  if (!(await exportBtn.count())) {
+    // Take a screenshot to help diagnose selector issues
+    await page.screenshot({ path: 'playwright-debug.png', fullPage: true });
+    console.error('[fetch_csv] Could not find export button. Screenshot saved: playwright-debug.png');
+    console.error('[fetch_csv] Update the selector in playwright/fetch_csv.js if the Veryon UI has changed.');
+    await browser.close();
+    process.exit(1);
+  }
+
+  console.log('[fetch_csv] Clicking export...');
+  const [ download ] = await Promise.all([
+    page.waitForEvent('download', { timeout: 60000 }),
+    exportBtn.click(),
+  ]);
+
+  // Save to data/
+  fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
+  await download.saveAs(OUTPUT_FILE);
+  console.log('[fetch_csv] Saved:', OUTPUT_FILE);
+
+  await browser.close();
+  console.log('[fetch_csv] Done.');
+})().catch(err => {
+  console.error('[fetch_csv] Fatal error:', err.message);
+  process.exit(1);
+});
+`;
+
+  // ---- .github/workflows/fetch-csv.yml ----
+  const fetchCsvYml = `name: Fetch Veryon CSV — ${fleetName}
+
+on:
+  schedule:
+    - cron: '0 13 * * 1-5'  # 7am MT weekdays (adjust to match your Veryon export schedule)
+  workflow_dispatch:         # also allows manual trigger from Actions tab
+
+jobs:
+  fetch-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: \${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install chromium --with-deps
+
+      - name: Fetch Veryon Due List CSV
+        env:
+          VERYON_URL:      \${{ secrets.VERYON_URL }}
+          VERYON_USER:     \${{ secrets.VERYON_USER }}
+          VERYON_PASS:     \${{ secrets.VERYON_PASS }}
+          OUTPUT_FILENAME: ${dailyCsv}
+        run: node playwright/fetch_csv.js
+
+      - name: Upload debug screenshot (if export failed)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-debug
+          path: playwright-debug.png
+          if-no-files-found: ignore
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: pip install pandas
+
+      - name: Build dashboard JSON
+        run: python src/build_dashboard.py
+
+      - name: Copy site to dist
+        run: |
+          mkdir -p dist
+          if [ -d "public" ]; then cp -R public/* dist/; fi
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ dist/
+          git diff --staged --quiet || git commit -m "Auto-fetch: Veryon CSV \$(date -u +%Y-%m-%d) [skip ci]"
+          git push || true
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: \${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+`;
+
   // ---- public/index.html ----
   // Build ATA match strings and inspection names for JS
   const inspJS = JSON.stringify(inspRows.map(r=>({name:r.name,match:r.match,metric:r.metric,warn:r.warn,crit:r.crit})));
@@ -1099,10 +1358,13 @@ Log "=== Sync complete ==="
   zip.folder("data").file(".gitkeep","");
   zip.folder("src").file("build_dashboard.py", buildPy);
   zip.folder("public").file("index.html", indexHtml);
+  zip.folder("playwright").file("fetch_csv.js", fetchCsvJs);
   zip.folder(".github").folder("workflows").file("build.yml", workflowYml);
+  zip.folder(".github").folder("workflows").file("fetch-csv.yml", fetchCsvYml);
   zip.file("README.md", readme);
   zip.file("sync.ps1", syncPs1);
-  zip.file(".gitignore", "node_modules/\n__pycache__/\n*.pyc\ndist/\nsync.log\n");
+  zip.file("package.json", JSON.stringify({name: repoName, private: true, scripts: {fetch: "node playwright/fetch_csv.js", build: "python src/build_dashboard.py"}}, null, 2)+"\n");
+  zip.file(".gitignore", "node_modules/\n__pycache__/\n*.pyc\ndist/\nsync.log\nplaywright-debug.png\n");
 
   generatedZip = zip;
 
@@ -1116,8 +1378,10 @@ Log "=== Sync complete ==="
   document.getElementById("file-list").innerHTML = `
     <div class="file-item"><span class="file-icon">🐍</span><span class="file-name">src/build_dashboard.py</span><span class="file-desc">Veryon CSV → dashboard.json</span></div>
     <div class="file-item"><span class="file-icon">🌐</span><span class="file-name">public/index.html</span><span class="file-desc">Dashboard frontend</span></div>
+    <div class="file-item"><span class="file-icon">🎭</span><span class="file-name">playwright/fetch_csv.js</span><span class="file-desc">Logs into Veryon and downloads the CSV</span></div>
     <div class="file-item"><span class="file-icon">⚙️</span><span class="file-name">.github/workflows/build.yml</span><span class="file-desc">GitHub Actions build + deploy</span></div>
-    <div class="file-item"><span class="file-icon">🔄</span><span class="file-name">sync.ps1</span><span class="file-desc">Windows Task Scheduler automation script</span></div>
+    <div class="file-item"><span class="file-icon">⚙️</span><span class="file-name">.github/workflows/fetch-csv.yml</span><span class="file-desc">GitHub Actions daily CSV fetch (Playwright)</span></div>
+    <div class="file-item"><span class="file-icon">🔄</span><span class="file-name">sync.ps1</span><span class="file-desc">Windows Task Scheduler automation (optional)</span></div>
     <div class="file-item"><span class="file-icon">📁</span><span class="file-name">data/</span><span class="file-desc">Drop your CSV files here</span></div>
     <div class="file-item"><span class="file-icon">📄</span><span class="file-name">README.md</span><span class="file-desc">Setup instructions</span></div>`;
 
@@ -1132,6 +1396,203 @@ async function downloadZip(){
   a.download = `${v("repo-name") || "dashboard"}.zip`;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+// ===== Deploy panel helpers =====
+function toggleDeployPanel(){
+  const p = document.getElementById("deploy-panel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
+  if(p.style.display === "block"){
+    // Restore saved token
+    const saved = localStorage.getItem("gh_token");
+    if(saved){ document.getElementById("gh-token").value = saved; document.getElementById("gh-remember").checked = true; ghTokenChanged(); }
+    const savedVyUser = localStorage.getItem("vy_user");
+    if(savedVyUser) document.getElementById("vy-user").value = savedVyUser;
+    p.scrollIntoView({behavior:"smooth"});
+  }
+}
+
+let ghUsername = null;
+async function ghTokenChanged(){
+  const token = document.getElementById("gh-token").value.trim();
+  const display = document.getElementById("gh-user-display");
+  if(!token){ display.style.display="none"; ghUsername=null; return; }
+  try{
+    const r = await fetch("https://api.github.com/user", {headers:{Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json"}});
+    if(!r.ok){ display.style.display="none"; ghUsername=null; return; }
+    const u = await r.json();
+    ghUsername = u.login;
+    display.textContent = `✓ Authenticated as @${ghUsername}`;
+    display.style.display = "block";
+  }catch(e){ display.style.display="none"; ghUsername=null; }
+}
+
+function deployLog(msg, color){
+  const el = document.getElementById("deploy-log");
+  el.style.display = "block";
+  el.innerHTML += `<span style="color:${color||"inherit"}">${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function encryptSecret(publicKeyB64, secretValue){
+  await _sodium.ready;
+  const sodium = _sodium;
+  const key = sodium.from_base64(publicKeyB64, sodium.base64_variants.ORIGINAL);
+  const val = sodium.from_string(secretValue);
+  const encrypted = sodium.crypto_box_seal(val, key);
+  return sodium.to_base64(encrypted, sodium.base64_variants.ORIGINAL);
+}
+
+async function ghApi(token, method, path, body){
+  const r = await fetch(`https://api.github.com${path}`, {
+    method,
+    headers:{ Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json", "Content-Type":"application/json", "X-GitHub-Api-Version":"2022-11-28" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await r.text();
+  let json; try{ json = JSON.parse(text); }catch(e){ json = {message: text}; }
+  if(!r.ok) throw new Error(json.message || `HTTP ${r.status}`);
+  return json;
+}
+
+async function pushFileToRepo(token, owner, repo, filePath, content){
+  // content is a plain string; we base64-encode it
+  const encoded = btoa(unescape(encodeURIComponent(content)));
+  // Check if file already exists (need its SHA to update)
+  let sha;
+  try{
+    const existing = await ghApi(token, "GET", `/repos/${owner}/${repo}/contents/${filePath}`);
+    sha = existing.sha;
+  }catch(e){ /* file doesn't exist yet — that's fine */ }
+  await ghApi(token, "PUT", `/repos/${owner}/${repo}/contents/${filePath}`, {
+    message: `Add ${filePath}`,
+    content: encoded,
+    ...(sha ? {sha} : {}),
+  });
+}
+
+async function setRepoSecret(token, owner, repo, secretName, secretValue, pubKeyId, pubKeyB64){
+  const encrypted = await encryptSecret(pubKeyB64, secretValue);
+  await ghApi(token, "PUT", `/repos/${owner}/${repo}/actions/secrets/${secretName}`, {
+    encrypted_value: encrypted,
+    key_id: pubKeyId,
+  });
+}
+
+async function deployToGitHub(){
+  if(!generatedZip){ showErr("Generate the dashboard first (click ⚡ Download ZIP)"); return; }
+
+  const token   = document.getElementById("gh-token").value.trim();
+  const vyUser  = document.getElementById("vy-user").value.trim();
+  const vyPass  = document.getElementById("vy-pass").value;
+  const remember = document.getElementById("gh-remember").checked;
+  const repoName = v("repo-name");
+  const fleetName = v("fleet-name");
+  const veryonUrl = v("veryon-url");
+
+  if(!token)   return showErr("Enter your GitHub personal access token");
+  if(!vyUser)  return showErr("Enter your Veryon username");
+  if(!vyPass)  return showErr("Enter your Veryon password");
+  if(!repoName) return showErr("Go back to Step 1 and fill in the repo name");
+
+  if(remember) localStorage.setItem("gh_token", token);
+  localStorage.setItem("vy_user", vyUser);
+
+  const btn = document.getElementById("btn-go-live");
+  btn.disabled = true;
+  btn.textContent = "Deploying…";
+
+  document.getElementById("deploy-err").style.display = "none";
+  document.getElementById("deploy-success").style.display = "none";
+  document.getElementById("deploy-log").innerHTML = "";
+
+  try{
+    // 1. Verify token & get username
+    deployLog("Verifying GitHub token…");
+    if(!ghUsername){ await ghTokenChanged(); }
+    if(!ghUsername) throw new Error("Could not authenticate with GitHub. Check your token.");
+    deployLog(`✓ Authenticated as @${ghUsername}`, "var(--green)");
+
+    // 2. Create repo (private)
+    deployLog(`Creating private repo: ${ghUsername}/${repoName}…`);
+    await ghApi(token, "POST", "/user/repos", {
+      name: repoName,
+      description: `${fleetName} Fleet Maintenance Dashboard — auto-generated by IHC Dashboard Generator`,
+      private: true,
+      auto_init: false,
+    });
+    deployLog(`✓ Repo created: github.com/${ghUsername}/${repoName}`, "var(--green)");
+
+    // 3. Push files
+    const files = [];
+    await generatedZip.forEach((relPath, file) => {
+      if(!file.dir) files.push({path: relPath, file});
+    });
+
+    deployLog(`Pushing ${files.length} files…`);
+    for(const {path: fp, file} of files){
+      const content = await file.async("string");
+      await pushFileToRepo(token, ghUsername, repoName, fp, content);
+      deployLog(`  ✓ ${fp}`);
+    }
+    deployLog("✓ All files pushed", "var(--green)");
+
+    // 4. Fetch repo public key for secrets encryption
+    deployLog("Fetching repo public key for secrets…");
+    const pubKey = await ghApi(token, "GET", `/repos/${ghUsername}/${repoName}/actions/secrets/public-key`);
+
+    // 5. Set secrets
+    deployLog("Setting GitHub Actions secrets…");
+    await setRepoSecret(token, ghUsername, repoName, "VERYON_USER", vyUser, pubKey.key_id, pubKey.key);
+    deployLog("  ✓ VERYON_USER");
+    await setRepoSecret(token, ghUsername, repoName, "VERYON_PASS", vyPass, pubKey.key_id, pubKey.key);
+    deployLog("  ✓ VERYON_PASS");
+    if(veryonUrl){
+      await setRepoSecret(token, ghUsername, repoName, "VERYON_URL", veryonUrl, pubKey.key_id, pubKey.key);
+      deployLog("  ✓ VERYON_URL");
+    }
+    deployLog("✓ Secrets configured", "var(--green)");
+
+    // 6. Enable GitHub Pages (source: gh-pages branch, deployed by peaceiris action)
+    deployLog("Enabling GitHub Pages…");
+    try{
+      await ghApi(token, "POST", `/repos/${ghUsername}/${repoName}/pages`, {
+        build_type: "workflow",
+      });
+      deployLog("✓ GitHub Pages enabled", "var(--green)");
+    }catch(e){
+      deployLog(`  (Pages: ${e.message} — enable manually in Settings → Pages)`, "var(--amber)");
+    }
+
+    // 7. Trigger initial workflow run
+    deployLog("Triggering initial build…");
+    try{
+      await ghApi(token, "POST", `/repos/${ghUsername}/${repoName}/actions/workflows/build.yml/dispatches`, { ref: "main" });
+      deployLog("✓ Build workflow triggered", "var(--green)");
+    }catch(e){
+      deployLog(`  (Trigger: ${e.message} — run manually from Actions tab)`, "var(--amber)");
+    }
+
+    // 8. Show success
+    const pagesUrl = `https://${ghUsername}.github.io/${repoName}/`;
+    document.getElementById("deploy-success-msg").innerHTML =
+      `<b>${fleetName}</b> dashboard deployed to <b>github.com/${ghUsername}/${repoName}</b>.<br>` +
+      `GitHub Actions fetches the Veryon CSV daily and rebuilds automatically.<br>` +
+      `The live URL will be active after the first build completes (~2 min):`;
+    document.getElementById("deploy-pages-link").href = pagesUrl;
+    document.getElementById("deploy-pages-link").textContent = `🌐 ${pagesUrl}`;
+    document.getElementById("deploy-success").style.display = "block";
+    deployLog(`\n🚀 Done! Dashboard: ${pagesUrl}`, "var(--green)");
+
+  }catch(err){
+    const errEl = document.getElementById("deploy-err");
+    errEl.textContent = `Deploy failed: ${err.message}`;
+    errEl.style.display = "block";
+    deployLog(`✗ ${err.message}`, "var(--red)");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "🚀 Go Live";
+  }
 }
 
 // ===== Build index.html =====
