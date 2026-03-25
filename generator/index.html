@@ -449,6 +449,8 @@ function validateStep(n){
 
 function v(id){ return document.getElementById(id).value.trim(); }
 
+function escHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+
 // ===== CSV Column Detection =====
 function detectColumns(){
   const raw = document.getElementById("csv-sample").value.trim();
@@ -611,8 +613,8 @@ function buildChartRadio(){
       const label = chartMetric==="weeks" ? `Weeks Remaining — ${r.name}` : `Hours Remaining — ${r.name}`;
       document.getElementById("chart-title").value = label;
     };
-    div.innerHTML = `<input type="radio" name="chart-insp" value="${r.name}" />
-      <div><div class="radio-opt-lbl">${r.name}</div><div class="radio-opt-sub">ATA match: ${r.match}</div></div>`;
+    div.innerHTML = `<input type="radio" name="chart-insp" value="${escHtml(r.name)}" />
+      <div><div class="radio-opt-lbl">${escHtml(r.name)}</div><div class="radio-opt-sub">ATA match: ${escHtml(r.match)}</div></div>`;
     container.appendChild(div);
   });
 }
@@ -625,27 +627,27 @@ function buildReview(){
   grid.innerHTML = `
     <div class="review-card">
       <div class="review-card-title">Fleet</div>
-      <div class="review-val">${v("fleet-name")}</div>
+      <div class="review-val">${escHtml(v("fleet-name"))}</div>
     </div>
     <div class="review-card">
       <div class="review-card-title">Organization</div>
-      <div class="review-val">${v("org-name")}</div>
+      <div class="review-val">${escHtml(v("org-name"))}</div>
     </div>
     <div class="review-card">
       <div class="review-card-title">Repo Name</div>
-      <div class="review-val">${v("repo-name")}</div>
+      <div class="review-val">${escHtml(v("repo-name"))}</div>
     </div>
     <div class="review-card">
       <div class="review-card-title">Daily CSV</div>
-      <div class="review-val" style="font-size:12px;">${v("daily-csv")}</div>
+      <div class="review-val" style="font-size:12px;">${escHtml(v("daily-csv"))}</div>
     </div>
     <div class="review-card" style="grid-column:1/-1;">
       <div class="review-card-title">Inspections (${rows.length})</div>
-      <div class="review-list">${rows.map(r=>`<span>${r.name}</span> — ${r.match} [${r.metric}]`).join("<br>")}</div>
+      <div class="review-list">${rows.map(r=>`<span>${escHtml(r.name)}</span> — ${escHtml(r.match)} [${escHtml(r.metric)}]`).join("<br>")}</div>
     </div>
     <div class="review-card">
       <div class="review-card-title">Bar Chart Inspection</div>
-      <div class="review-val" style="font-size:13px;">${chartInsp}</div>
+      <div class="review-val" style="font-size:13px;">${escHtml(chartInsp)}</div>
     </div>
     <div class="review-card">
       <div class="review-card-title">Chart Metric</div>
@@ -653,7 +655,7 @@ function buildReview(){
     </div>
     ${v("veryon-url") ? `<div class="review-card" style="grid-column:1/-1;">
       <div class="review-card-title">Veryon Export URL <span class="tag tag-green" style="vertical-align:middle;margin-left:6px;">Auto-fetch configured</span></div>
-      <div class="review-val" style="font-size:11px;word-break:break-all;font-family:var(--mono);">${v("veryon-url")}</div>
+      <div class="review-val" style="font-size:11px;word-break:break-all;font-family:var(--mono);">${escHtml(v("veryon-url"))}</div>
     </div>` : `<div class="review-card" style="grid-column:1/-1;border-color:rgba(255,171,0,0.3);">
       <div class="review-card-title">Veryon Export URL</div>
       <div class="review-val" style="font-size:12px;color:var(--amber);">Not set — CSV fetch will not be automated</div>
@@ -1215,7 +1217,7 @@ if (!VERYON_URL || !VERYON_USER || !VERYON_PASS) {
       'button[type="submit"], input[type="submit"], .login-btn, .btn-login, #login-button, #btnLogin'
     ).first().click();
 
-    await page.waitForNavigation({ waitUntil: 'networkidle', timeout: 60000 });
+    await page.waitForLoadState('networkidle', { timeout: 60000 });
     console.log('[fetch_csv] Authenticated. Current URL:', page.url());
 
     // If we landed somewhere other than the target, navigate there now
@@ -1292,12 +1294,13 @@ jobs:
           node-version: '20'
 
       - name: Install Playwright
+        if: \${{ secrets.VERYON_URL != '' }}
         run: |
-          npm init -y
           npm install playwright
           npx playwright install chromium --with-deps
 
       - name: Fetch Veryon Due List CSV
+        if: \${{ secrets.VERYON_URL != '' }}
         env:
           VERYON_URL:      \${{ secrets.VERYON_URL }}
           VERYON_USER:     \${{ secrets.VERYON_USER }}
@@ -1306,7 +1309,7 @@ jobs:
         run: node playwright/fetch_csv.js
 
       - name: Upload debug screenshot (if export failed)
-        if: failure()
+        if: \${{ secrets.VERYON_URL != '' && failure() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-debug
@@ -1491,12 +1494,12 @@ async function deployToGitHub(){
   const veryonUrl = v("veryon-url");
 
   if(!token)   return showErr("Enter your GitHub personal access token");
-  if(!vyUser)  return showErr("Enter your Veryon username");
-  if(!vyPass)  return showErr("Enter your Veryon password");
+  if(veryonUrl && !vyUser)  return showErr("Enter your Veryon username (required for auto-fetch)");
+  if(veryonUrl && !vyPass)  return showErr("Enter your Veryon password (required for auto-fetch)");
   if(!repoName) return showErr("Go back to Step 1 and fill in the repo name");
 
   if(remember) localStorage.setItem("gh_token", token);
-  localStorage.setItem("vy_user", vyUser);
+  if(remember) localStorage.setItem("vy_user", vyUser);
 
   const btn = document.getElementById("btn-go-live");
   btn.disabled = true;
@@ -1543,10 +1546,12 @@ async function deployToGitHub(){
 
     // 5. Set secrets
     deployLog("Setting GitHub Actions secrets…");
-    await setRepoSecret(token, ghUsername, repoName, "VERYON_USER", vyUser, pubKey.key_id, pubKey.key);
-    deployLog("  ✓ VERYON_USER");
-    await setRepoSecret(token, ghUsername, repoName, "VERYON_PASS", vyPass, pubKey.key_id, pubKey.key);
-    deployLog("  ✓ VERYON_PASS");
+    if(veryonUrl && vyUser && vyPass){
+      await setRepoSecret(token, ghUsername, repoName, "VERYON_USER", vyUser, pubKey.key_id, pubKey.key);
+      deployLog("  ✓ VERYON_USER");
+      await setRepoSecret(token, ghUsername, repoName, "VERYON_PASS", vyPass, pubKey.key_id, pubKey.key);
+      deployLog("  ✓ VERYON_PASS");
+    }
     if(veryonUrl){
       await setRepoSecret(token, ghUsername, repoName, "VERYON_URL", veryonUrl, pubKey.key_id, pubKey.key);
       deployLog("  ✓ VERYON_URL");
@@ -1565,10 +1570,11 @@ async function deployToGitHub(){
     }
 
     // 7. Trigger initial workflow run
-    deployLog("Triggering initial build…");
+    const initialWorkflow = veryonUrl ? "fetch-csv.yml" : "build.yml";
+    deployLog(`Triggering initial ${veryonUrl ? "fetch + build" : "build"} workflow…`);
     try{
-      await ghApi(token, "POST", `/repos/${ghUsername}/${repoName}/actions/workflows/build.yml/dispatches`, { ref: "main" });
-      deployLog("✓ Build workflow triggered", "var(--green)");
+      await ghApi(token, "POST", `/repos/${ghUsername}/${repoName}/actions/workflows/${initialWorkflow}/dispatches`, { ref: "main" });
+      deployLog(`✓ ${veryonUrl ? "Fetch + build" : "Build"} workflow triggered`, "var(--green)");
     }catch(e){
       deployLog(`  (Trigger: ${e.message} — run manually from Actions tab)`, "var(--amber)");
     }
