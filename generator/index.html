@@ -158,7 +158,12 @@ select option{background:var(--surface2);}
         <button class="btn-download" onclick="downloadZip()">⬇ Download ZIP</button>
         <button class="btn-email" onclick="sendSetupEmail()">📧 Send Setup Request</button>
       </div>
-      <div id="email-sent" style="display:none;font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:12px;">✓ Email opened — just hit send</div>
+      <div id="email-sent" style="display:none;font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:12px;">✓ Outlook should open — if not, copy the text below and paste into an email.</div>
+      <div id="email-fallback" style="display:none;margin:12px 0;">
+        <textarea id="email-body-text" readonly style="width:100%;height:180px;background:#0e1117;border:1px solid #252f3e;border-radius:6px;color:#cdd6e0;font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px;resize:vertical;"></textarea>
+        <button onclick="copyEmailBody()" style="margin-top:6px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;background:transparent;border:1px solid #252f3e;border-radius:6px;color:#4a5568;cursor:pointer;">Copy to clipboard</button>
+        <span id="copy-ok" style="display:none;font-family:'Share Tech Mono',monospace;font-size:11px;color:#00e676;margin-left:10px;">✓ Copied</span>
+      </div>
       <div class="file-list" id="file-list"></div>
     </div>
   </div>
@@ -1032,8 +1037,29 @@ function sendSetupEmail(){
 
   const subject = encodeURIComponent(`Dashboard Setup Request — ${c.fleetName} Fleet`);
   const bodyEnc = encodeURIComponent(body);
-  window.open(`mailto:${OWNER_EMAIL}?subject=${subject}&body=${bodyEnc}`);
+
+  // Use anchor click (same pattern as ZIP download) — doesn't navigate the tab
+  const a = document.createElement("a");
+  a.href = `mailto:${OWNER_EMAIL}?subject=${subject}&body=${bodyEnc}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Always show fallback text in case no mail client opens
+  document.getElementById("email-body-text").value =
+    `To: ${OWNER_EMAIL}\nSubject: Dashboard Setup Request — ${c.fleetName} Fleet\n\n${body}`;
   document.getElementById("email-sent").style.display = "block";
+  document.getElementById("email-fallback").style.display = "block";
+}
+
+function copyEmailBody(){
+  const ta = document.getElementById("email-body-text");
+  ta.select();
+  navigator.clipboard.writeText(ta.value).then(()=>{
+    const ok = document.getElementById("copy-ok");
+    ok.style.display = "inline";
+    setTimeout(()=>ok.style.display="none", 2500);
+  });
 }
 
 // ===== Build index.html =====
