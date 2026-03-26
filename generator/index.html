@@ -21,34 +21,21 @@ html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:0;}
 
-/* ---- Layout ---- */
 .shell{max-width:860px;margin:0 auto;padding:40px 28px 80px;position:relative;z-index:1;}
 
-/* ---- Header ---- */
+/* Header */
 .hdr{margin-bottom:40px;border-bottom:1px solid var(--border);padding-bottom:28px;}
 .hdr-eyebrow{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
 .hdr-title{font-family:var(--sans);font-size:42px;font-weight:900;letter-spacing:2px;color:var(--heading);text-transform:uppercase;line-height:1;}
 .hdr-title span{color:var(--blue);}
 .hdr-sub{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.6;}
 
-/* ---- Steps ---- */
-.steps{display:flex;gap:0;margin-bottom:32px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.step-indicator{flex:1;padding:10px 14px;background:var(--surface);border-right:1px solid var(--border);text-align:center;cursor:pointer;transition:.15s;}
-.step-indicator:last-child{border-right:none;}
-.step-indicator.active{background:var(--surface2);border-bottom:2px solid var(--blue);}
-.step-indicator.done{background:var(--surface);border-bottom:2px solid var(--green);}
-.step-num{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;}
-.step-lbl{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:2px;}
-.step-indicator.active .step-lbl{color:var(--blue);}
-.step-indicator.done .step-lbl{color:var(--green);}
-
-/* ---- Sections ---- */
-.section{display:none;}
-.section.active{display:block;}
+/* Form sections */
+.form-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;}
 .section-title{font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:18px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .section-title span{color:var(--blue);}
 
-/* ---- Form elements ---- */
+/* Form elements */
 .field{margin-bottom:20px;}
 .field label{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
 .field label b{color:var(--text);}
@@ -59,35 +46,20 @@ input[type=text], input[type=number], select, textarea{
   transition:border-color .15s;
 }
 input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus{border-color:var(--blue);}
-textarea{resize:vertical;min-height:80px;line-height:1.5;}
 select option{background:var(--surface2);}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 
-/* ---- CSV paste area ---- */
-.csv-drop{border:1px dashed var(--border2);border-radius:var(--radius);padding:20px;background:var(--surface);cursor:pointer;transition:.15s;text-align:center;}
-.csv-drop:hover{border-color:var(--blue);background:var(--surface2);}
-.csv-drop-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px;}
-.csv-paste{margin-top:10px;}
-
-/* ---- Detected columns ---- */
-.col-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-.col-chip{font-family:var(--mono);font-size:10px;padding:4px 8px;border:1px solid var(--border2);border-radius:4px;color:var(--muted);cursor:pointer;transition:.12s;user-select:none;}
-.col-chip:hover{border-color:var(--blue);color:var(--blue);}
-.col-chip.selected{background:rgba(41,182,246,0.12);border-color:var(--blue);color:var(--blue);}
-
-/* ---- Inspection list builder ---- */
+/* Inspection row builder — simplified: name | ATA match | metric | delete */
 .insp-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
-.insp-row{display:grid;grid-template-columns:1fr 1fr 130px 130px 36px;gap:8px;align-items:center;}
-.insp-row input, .insp-row select{margin:0;}
-.insp-row-hdr{display:grid;grid-template-columns:1fr 1fr 130px 130px 36px;gap:8px;margin-bottom:4px;}
+.insp-row{display:grid;grid-template-columns:1fr 1fr 160px 36px;gap:8px;align-items:center;}
+.insp-row input,.insp-row select{margin:0;}
+.insp-row-hdr{display:grid;grid-template-columns:1fr 1fr 160px 36px;gap:8px;margin-bottom:4px;}
 .insp-hdr-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
 .btn-del{width:36px;height:36px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.12s;flex:0 0 auto;}
 .btn-del:hover{border-color:var(--red);color:var(--red);}
 .btn-add{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 14px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;transition:.12s;}
 .btn-add:hover{border-color:var(--green);color:var(--green);}
 
-/* ---- Chart inspection selector ---- */
+/* Bar chart radio */
 .radio-group{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
 .radio-opt{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;transition:.12s;}
 .radio-opt:hover{border-color:var(--blue);}
@@ -95,37 +67,24 @@ select option{background:var(--surface2);}
 .radio-opt input{accent-color:var(--blue);}
 .radio-opt-lbl{font-family:var(--mono);font-size:11px;color:var(--text);}
 .radio-opt-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px;}
+.empty-hint{font-family:var(--mono);font-size:11px;color:var(--muted);padding:10px 0;}
 
-/* ---- Nav buttons ---- */
-.nav-row{display:flex;justify-content:space-between;margin-top:32px;gap:12px;}
-.btn-back{font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 20px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius);color:var(--muted);cursor:pointer;transition:.12s;}
-.btn-back:hover{border-color:var(--text);color:var(--text);}
-.btn-next{font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;background:var(--blue);border:none;border-radius:var(--radius);color:#000;cursor:pointer;transition:.12s;}
-.btn-next:hover{background:#4fc3f7;}
-.btn-next:disabled{background:var(--muted);cursor:not-allowed;}
+/* Buttons */
+.nav-row{display:flex;justify-content:flex-end;margin-top:8px;}
 .btn-generate{font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:16px 40px;background:var(--green);border:none;border-radius:var(--radius);color:#000;cursor:pointer;transition:.12s;box-shadow:0 0 30px rgba(0,230,118,0.2);}
 .btn-generate:hover{background:#69f0ae;box-shadow:0 0 40px rgba(0,230,118,0.35);}
-.btn-deploy-toggle{font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:16px 32px;background:transparent;border:2px solid var(--blue);border-radius:var(--radius);color:var(--blue);cursor:pointer;transition:.12s;}
-.btn-deploy-toggle:hover{background:rgba(41,182,246,0.1);}
-.btn-deploy{font-family:var(--sans);font-size:14px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:14px 36px;background:var(--blue);border:none;border-radius:var(--radius);color:#000;cursor:pointer;transition:.12s;box-shadow:0 0 30px rgba(41,182,246,0.2);}
-.btn-deploy:hover{background:#4fc3f7;box-shadow:0 0 40px rgba(41,182,246,0.35);}
-.btn-deploy:disabled{background:var(--muted);cursor:not-allowed;box-shadow:none;}
+.btn-generate:disabled{background:var(--muted);cursor:not-allowed;box-shadow:none;}
 
-/* ---- Review panel ---- */
-.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
-.review-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
-.review-card-title{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
-.review-val{font-family:var(--sans);font-size:15px;font-weight:700;color:var(--heading);}
-.review-list{font-family:var(--mono);font-size:10px;color:var(--text);line-height:1.8;}
-.review-list span{color:var(--blue);}
-
-/* ---- Output ---- */
-.output-panel{background:var(--surface);border:1px solid var(--green);border-radius:var(--radius);padding:24px;text-align:center;}
+/* Output panel */
+.output-panel{background:var(--surface);border:1px solid var(--green);border-radius:var(--radius);padding:24px;text-align:center;margin-top:28px;}
 .output-icon{font-size:40px;margin-bottom:12px;}
 .output-title{font-family:var(--sans);font-size:20px;font-weight:900;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:8px;}
 .output-sub{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
+.btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
 .btn-download{font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:14px 32px;background:var(--green);border:none;border-radius:var(--radius);color:#000;cursor:pointer;display:inline-flex;align-items:center;gap:8px;}
 .btn-download:hover{background:#69f0ae;}
+.btn-email{font-family:var(--sans);font-size:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:14px 32px;background:transparent;border:2px solid var(--blue);border-radius:var(--radius);color:var(--blue);cursor:pointer;display:inline-flex;align-items:center;gap:8px;}
+.btn-email:hover{background:rgba(41,182,246,0.1);}
 .file-list{margin-top:20px;text-align:left;font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
 .file-item{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .file-item:last-child{border-bottom:none;}
@@ -134,14 +93,6 @@ select option{background:var(--surface2);}
 .file-desc{color:var(--muted);margin-left:auto;}
 
 .errbox{background:rgba(255,23,68,0.08);border:1px solid rgba(255,23,68,0.35);border-radius:var(--radius);padding:10px 14px;font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:16px;display:none;}
-
-/* ---- Misc ---- */
-.divider{height:1px;background:var(--border);margin:24px 0;}
-.tag{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;border:1px solid var(--border2);color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-.tag-blue{border-color:rgba(41,182,246,0.4);color:var(--blue);}
-.tag-green{border-color:rgba(0,230,118,0.4);color:var(--green);}
-.progress-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:32px;overflow:hidden;}
-.progress-fill{height:3px;background:var(--blue);border-radius:2px;transition:width .4s;}
 </style>
 </head>
 <body>
@@ -150,421 +101,103 @@ select option{background:var(--surface2);}
   <div class="hdr">
     <div class="hdr-eyebrow">IHC Health Services — Internal Tool</div>
     <div class="hdr-title">Veryon <span>Dashboard</span> Generator</div>
-    <div class="hdr-sub">Configure a flight maintenance dashboard for any Veryon-tracked fleet.<br>Outputs a ready-to-deploy GitHub repository as a zip file.</div>
-  </div>
-
-  <div class="progress-bar"><div class="progress-fill" id="progress" style="width:20%"></div></div>
-
-  <div class="steps" id="steps">
-    <div class="step-indicator active" onclick="goStep(1)"><div class="step-num">01</div><div class="step-lbl">Fleet Info</div></div>
-    <div class="step-indicator" onclick="goStep(2)"><div class="step-num">02</div><div class="step-lbl">CSV Setup</div></div>
-    <div class="step-indicator" onclick="goStep(3)"><div class="step-num">03</div><div class="step-lbl">Inspections</div></div>
-    <div class="step-indicator" onclick="goStep(4)"><div class="step-num">04</div><div class="step-lbl">Bar Chart</div></div>
-    <div class="step-indicator" onclick="goStep(5)"><div class="step-num">05</div><div class="step-lbl">Review</div></div>
+    <div class="hdr-sub">Three questions. We handle the rest.<br>Fill this out and your dashboard team will have everything they need to go live.</div>
   </div>
 
   <div id="err" class="errbox"></div>
 
-  <!-- ===== STEP 1: Fleet Info ===== -->
-  <div class="section active" id="s1">
-    <div class="section-title"><span>01</span> Fleet Information</div>
-    <div class="row2">
-      <div class="field">
-        <label><b>Fleet / Aircraft Type</b></label>
-        <input type="text" id="fleet-name" placeholder="e.g. Bell 412, AW139, EC135" />
-        <div class="field-hint">Used in dashboard title and file names</div>
-      </div>
-      <div class="field">
-        <label><b>Organization Name</b></label>
-        <input type="text" id="org-name" placeholder="e.g. IHC Health Services" />
-      </div>
-    </div>
+  <!-- Q1: Aircraft Type -->
+  <div class="form-section">
+    <div class="section-title"><span>01</span> Aircraft / Fleet Type</div>
     <div class="field">
-      <label><b>GitHub Repo Name</b> (no spaces)</label>
-      <input type="text" id="repo-name" placeholder="e.g. 412-fleet-tracker" />
-      <div class="field-hint">Will be used for GitHub Pages URL: username.github.io/repo-name</div>
-    </div>
-    <div class="field">
-      <label><b>Daily CSV Filename</b></label>
-      <input type="text" id="daily-csv" placeholder="e.g. 412_daily_due_list.csv" />
-      <div class="field-hint">The file your Windows task scheduler drops into data/ each day</div>
-    </div>
-    <div class="field">
-      <label><b>Weekly / Long Range CSV Filename</b> (optional)</label>
-      <input type="text" id="weekly-csv" placeholder="e.g. 412_Due-List_weekly.csv" />
-      <div class="field-hint">Used to bootstrap utilization history. Leave blank if not available.</div>
-    </div>
-    <div class="field">
-      <label><b>Veryon Export Source Path</b> (optional — for sync script)</label>
-      <input type="text" id="export-src" placeholder="e.g. C:\Users\dispatch\Downloads\412_daily_due_list.csv" />
-      <div class="field-hint">Where Veryon saves the daily export on the Windows machine. Used in the generated <code>sync.ps1</code> automation script.</div>
-    </div>
-    <div class="field">
-      <label><b>Veryon Due List URL</b> (optional — for GitHub Actions auto-fetch)</label>
-      <input type="text" id="veryon-url" placeholder="e.g. https://app.veryon.com/tracking/due-list?fleet=412" />
-      <div class="field-hint">Paste the Veryon URL right before you click Export. The generated Playwright script navigates here, logs in, clicks Export, and saves the CSV on a daily schedule in GitHub Actions — no manual steps needed.</div>
-    </div>
-    <div class="nav-row">
-      <div></div>
-      <button class="btn-next" onclick="nextStep(1)">Next →</button>
+      <input type="text" id="aircraft-type" placeholder="e.g. PC-12, Bell 412, AW139, EC135" />
+      <div class="field-hint">Used in the dashboard title and generated file names</div>
     </div>
   </div>
 
-  <!-- ===== STEP 2: CSV Setup ===== -->
-  <div class="section" id="s2">
-    <div class="section-title"><span>02</span> CSV Column Detection</div>
-    <div class="field">
-      <label><b>Paste a sample row from your Veryon daily export</b></label>
-      <div class="field-hint" style="margin-bottom:8px;">Include the header row + at least one data row. Merlin will sniff out the columns and let you pick which ones identify inspection types.</div>
-      <textarea id="csv-sample" placeholder="Registration Number,ATA and Code,Description,Item Type,Requirement Type,Remaining Hours,Remaining Days,Next Due Date,...&#10;N412AB,05 12MO- INSPECTION,12 MONTH AIRFRAME INSPECTION,INSPECTION,,120,45,2026-06-15,..." rows="5"></textarea>
-    </div>
-    <button class="btn-add" onclick="detectColumns()" style="margin-bottom:16px;">⚡ Detect Columns</button>
-
-    <div id="col-detect-result" style="display:none;">
-      <div class="field">
-        <label><b>Detected Columns</b> — click any that help identify inspection type</label>
-        <div class="field-hint" style="margin-bottom:8px;">Standard columns (ATA, Description, Item Type, Requirement Type) are always used. Select any additional columns that your fleet uses to categorize inspections.</div>
-        <div class="col-grid" id="col-chips"></div>
-      </div>
-      <div id="sample-values" style="display:none;" class="field">
-        <label><b>Sample values from selected column</b></label>
-        <div class="col-grid" id="sample-val-chips"></div>
-      </div>
-    </div>
-
-    <div class="nav-row">
-      <button class="btn-back" onclick="prevStep(2)">← Back</button>
-      <button class="btn-next" onclick="nextStep(2)">Next →</button>
-    </div>
-  </div>
-
-  <!-- ===== STEP 3: Inspections ===== -->
-  <div class="section" id="s3">
-    <div class="section-title"><span>03</span> Inspections to Track <span style="font-size:10px;color:var(--muted);font-weight:400;"> — max 9</span></div>
+  <!-- Q2: Inspections -->
+  <div class="form-section">
+    <div class="section-title"><span>02</span> Inspections to Track</div>
     <div class="field-hint" style="margin-bottom:14px;">
-      Enter each inspection you want tracked. The <b>ATA Match String</b> is the text that appears in the ATA and Code column of your CSV — it's how the build script identifies this inspection type. The <b>Display Name</b> is what shows on the dashboard.
+      Enter each inspection you want tracked on the maintenance due list.
+      <b>ATA Match String</b> is the text in your Veryon <em>ATA and Code</em> column that identifies each inspection type.
     </div>
-
     <div class="insp-row-hdr">
       <div class="insp-hdr-lbl">Display Name</div>
       <div class="insp-hdr-lbl">ATA Match String</div>
       <div class="insp-hdr-lbl">Metric</div>
-      <div class="insp-hdr-lbl">Urgency Thresholds</div>
       <div></div>
     </div>
     <div class="insp-list" id="insp-list"></div>
     <button class="btn-add" onclick="addInspRow()" id="btn-add-insp">+ Add Inspection</button>
-
-    <div class="divider"></div>
-    <div class="field">
-      <label><b>Component Window</b> — show components due within this many hours</label>
-      <input type="number" id="comp-window" value="200" min="50" max="1000" style="max-width:160px;" />
-      <div class="field-hint">Applies to the Components tab (PART items + OVERHAUL inspections)</div>
-    </div>
-
-    <div class="nav-row">
-      <button class="btn-back" onclick="prevStep(3)">← Back</button>
-      <button class="btn-next" onclick="nextStep(3)">Next →</button>
-    </div>
   </div>
 
-  <!-- ===== STEP 4: Bar Chart ===== -->
-  <div class="section" id="s4">
-    <div class="section-title"><span>04</span> Homepage Bar Chart</div>
+  <!-- Q3: Bar Chart -->
+  <div class="form-section">
+    <div class="section-title"><span>03</span> Bar Chart Inspection</div>
     <div class="field-hint" style="margin-bottom:16px;">
-      Choose which inspection to feature on the bar chart on the Inspections tab. This is the one your ops team cares about most — typically the annual inspection or a major interval check.
+      The bar chart on the Inspections tab shows this inspection across all aircraft. Pick the one your ops team watches most closely.
     </div>
-    <div class="field">
-      <label><b>Select inspection for bar chart</b></label>
-      <div class="radio-group" id="chart-radio"></div>
-    </div>
-    <div class="field" style="margin-top:16px;">
-      <label><b>Chart metric</b></label>
-      <div class="row2">
-        <div class="radio-opt" id="metric-weeks" onclick="selectMetric('weeks')" style="cursor:pointer;">
-          <input type="radio" name="metric" value="weeks"/> 
-          <div><div class="radio-opt-lbl">Weeks Remaining</div><div class="radio-opt-sub">Date-driven inspection (e.g. 12 Month, annual)</div></div>
-        </div>
-        <div class="radio-opt" id="metric-hours" onclick="selectMetric('hours')" style="cursor:pointer;">
-          <input type="radio" name="metric" value="hours"/>
-          <div><div class="radio-opt-lbl">Hours Remaining</div><div class="radio-opt-sub">Hour-driven inspection (e.g. 300HR, 600HR)</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="field">
-      <label><b>Chart Title</b></label>
-      <input type="text" id="chart-title" placeholder="e.g. Weeks Remaining — 12 Month Inspection" />
-    </div>
-    <div class="nav-row">
-      <button class="btn-back" onclick="prevStep(4)">← Back</button>
-      <button class="btn-next" onclick="nextStep(4)">Next →</button>
+    <div class="radio-group" id="chart-radio">
+      <div class="empty-hint">Add inspections above to see options here.</div>
     </div>
   </div>
 
-  <!-- ===== STEP 5: Review & Generate ===== -->
-  <div class="section" id="s5">
-    <div class="section-title"><span>05</span> Review & Generate</div>
-    <div class="review-grid" id="review-grid"></div>
-    <div id="output-panel" style="display:none;">
-      <div class="output-panel">
-        <div class="output-icon">📦</div>
-        <div class="output-title">Dashboard Ready</div>
-        <div class="output-sub" id="output-sub"></div>
+  <!-- Generate -->
+  <div class="nav-row">
+    <button class="btn-generate" id="btn-generate" onclick="generate()">⚡ Generate Dashboard</button>
+  </div>
+
+  <!-- Output -->
+  <div id="output-panel" style="display:none;">
+    <div class="output-panel">
+      <div class="output-icon">📦</div>
+      <div class="output-title">Dashboard Ready</div>
+      <div class="output-sub" id="output-sub"></div>
+      <div class="btn-row">
         <button class="btn-download" onclick="downloadZip()">⬇ Download ZIP</button>
-        <div class="file-list" id="file-list"></div>
+        <button class="btn-email" onclick="sendSetupEmail()">📧 Send Setup Request</button>
       </div>
-    </div>
-    <div id="generate-row" class="nav-row">
-      <button class="btn-back" onclick="prevStep(5)">← Back</button>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <button class="btn-generate" onclick="generate()">⚡ Download ZIP</button>
-        <button class="btn-deploy-toggle" onclick="toggleDeployPanel()">🚀 Deploy to GitHub</button>
-      </div>
-    </div>
-
-    <!-- ===== Deploy Panel ===== -->
-    <div id="deploy-panel" style="display:none;margin-top:28px;">
-      <div class="divider"></div>
-      <div class="section-title"><span style="color:var(--green);">⚡</span> Deploy to GitHub</div>
-      <div class="field-hint" style="margin-bottom:20px;line-height:1.7;">
-        Fills out the repo automatically under your account. Coworkers fill in the form above — you hit Go Live. The repo is created private, GitHub Actions handles all CSV fetching and deployments, and the dashboard goes live on GitHub Pages. <b>Only you can push to the repo.</b>
-      </div>
-
-      <div class="section-title" style="font-size:10px;margin-bottom:14px;"><span>GH</span> GitHub</div>
-      <div class="field">
-        <label><b>GitHub Personal Access Token</b></label>
-        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" oninput="ghTokenChanged()" />
-        <div class="field-hint">Needs scopes: <code>repo</code>, <code>workflow</code>. <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=IHC+Dashboard+Deploy" target="_blank" style="color:var(--blue);">Generate one here →</a><br>Token is saved to this browser only — never sent anywhere except api.github.com.</div>
-      </div>
-      <div class="field" style="display:flex;align-items:center;gap:10px;">
-        <input type="checkbox" id="gh-remember" style="width:auto;accent-color:var(--blue);" />
-        <label style="display:inline;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0;text-transform:none;">Remember token on this device</label>
-      </div>
-      <div id="gh-user-display" style="display:none;font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:16px;"></div>
-
-      <div class="section-title" style="font-size:10px;margin-bottom:14px;"><span>VR</span> Veryon Credentials <span style="font-size:9px;color:var(--muted);font-weight:400;">— stored as encrypted GitHub secrets, never in repo</span></div>
-      <div class="row2">
-        <div class="field">
-          <label><b>Veryon Username</b></label>
-          <input type="text" id="vy-user" placeholder="your.email@ihchealth.org" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label><b>Veryon Password</b></label>
-          <input type="password" id="vy-pass" placeholder="••••••••" autocomplete="off" />
-        </div>
-      </div>
-      <div class="field-hint" style="margin-bottom:20px;">Credentials are encrypted with your repo's public key and stored as GitHub Actions secrets — they are never written to the repository files.</div>
-
-      <div id="deploy-err" class="errbox" style="display:none;"></div>
-      <div id="deploy-log" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:16px;max-height:220px;overflow-y:auto;"></div>
-
-      <div id="deploy-success" style="display:none;" class="output-panel">
-        <div class="output-icon">🚀</div>
-        <div class="output-title" style="color:var(--green);">Live!</div>
-        <div class="output-sub" id="deploy-success-msg"></div>
-        <a id="deploy-pages-link" href="#" target="_blank" class="btn-download" style="display:inline-flex;text-decoration:none;">🌐 Open Dashboard</a>
-      </div>
-
-      <div id="deploy-btn-row" class="nav-row" style="justify-content:flex-end;">
-        <button class="btn-deploy" id="btn-go-live" onclick="deployToGitHub()">🚀 Go Live</button>
-      </div>
+      <div id="email-sent" style="display:none;font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:12px;">✓ Email opened — just hit send</div>
+      <div class="file-list" id="file-list"></div>
     </div>
   </div>
 
 </div><!-- /shell -->
 
 <script>
+// ===== CONFIG — change OWNER_EMAIL to your address =====
+const OWNER_EMAIL = "YOUR_EMAIL_HERE";
+
 // ===== State =====
-let currentStep = 1;
-let detectedColumns = [];
-let csvRows = [];
-let selectedExtraCol = null;
-let chartMetric = "weeks";
 let generatedZip = null;
-
-// ===== Step navigation =====
-function updateProgress(){
-  document.getElementById("progress").style.width = (currentStep/5*100)+"%";
-  document.querySelectorAll(".step-indicator").forEach((el,i)=>{
-    el.classList.remove("active","done");
-    if(i+1 === currentStep) el.classList.add("active");
-    else if(i+1 < currentStep) el.classList.add("done");
-  });
-}
-
-function goStep(n){
-  if(n > currentStep) return; // only go back freely
-  document.getElementById("s"+currentStep).classList.remove("active");
-  currentStep = n;
-  document.getElementById("s"+currentStep).classList.add("active");
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function showErr(msg){ const e=document.getElementById("err"); e.textContent=msg; e.style.display="block"; setTimeout(()=>e.style.display="none",4000); }
-
-function nextStep(from){
-  if(!validateStep(from)) return;
-  if(from===3) buildChartRadio();
-  if(from===4) buildReview();
-  document.getElementById("s"+from).classList.remove("active");
-  currentStep = from+1;
-  document.getElementById("s"+currentStep).classList.add("active");
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function prevStep(from){
-  document.getElementById("s"+from).classList.remove("active");
-  currentStep = from-1;
-  document.getElementById("s"+currentStep).classList.add("active");
-  updateProgress();
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-// ===== Validation =====
-function validateStep(n){
-  if(n===1){
-    if(!v("fleet-name"))  return showErr("Fleet name is required"), false;
-    if(!v("org-name"))    return showErr("Organization name is required"), false;
-    if(!v("repo-name"))   return showErr("Repo name is required"), false;
-    if(!v("daily-csv"))   return showErr("Daily CSV filename is required"), false;
-    // sanitize repo name
-    document.getElementById("repo-name").value = document.getElementById("repo-name").value.replace(/\s+/g,"-").toLowerCase();
-  }
-  if(n===3){
-    const rows = getInspRows();
-    if(!rows.length) return showErr("Add at least one inspection to track"), false;
-    for(const r of rows){
-      if(!r.name || !r.match) return showErr("All inspections need a display name and ATA match string"), false;
-    }
-  }
-  if(n===4){
-    if(!document.querySelector('input[name="chart-insp"]:checked')) return showErr("Select an inspection for the bar chart"), false;
-    if(!chartMetric) return showErr("Select weeks or hours for the chart metric"), false;
-    if(!v("chart-title")) return showErr("Enter a chart title"), false;
-  }
-  return true;
-}
+let _lastConfig  = null;   // stored after generate() for email
 
 function v(id){ return document.getElementById(id).value.trim(); }
-
 function escHtml(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+function showErr(msg){ const e=document.getElementById("err"); e.textContent=msg; e.style.display="block"; setTimeout(()=>e.style.display="none",4500); }
 
-// ===== CSV Column Detection =====
-function detectColumns(){
-  const raw = document.getElementById("csv-sample").value.trim();
-  if(!raw){ showErr("Paste a sample CSV first"); return; }
-
-  const lines = raw.split(/\r?\n/).filter(l=>l.trim());
-  if(lines.length < 2){ showErr("Need at least a header row and one data row"); return; }
-
-  // Parse CSV header
-  const header = parseCSVLine(lines[0]);
-  csvRows = lines.slice(1).map(l => {
-    const vals = parseCSVLine(l);
-    const obj = {};
-    header.forEach((h,i) => obj[h.trim()] = (vals[i]||"").trim());
-    return obj;
-  });
-  detectedColumns = header.map(h=>h.trim());
-
-  // Standard columns we always use
-  const STANDARD = ["Registration Number","ATA and Code","Description","Item Type",
-    "Requirement Type","Remaining Hours","Remaining Days","Next Due Date",
-    "Next Due Hours","Status","Next Due Status"];
-
-  const extra = detectedColumns.filter(c => !STANDARD.some(s=>s.toLowerCase()===c.toLowerCase()));
-
-  const chips = document.getElementById("col-chips");
-  chips.innerHTML = "";
-
-  // Show standard ones greyed out
-  STANDARD.forEach(col=>{
-    if(detectedColumns.includes(col)){
-      const chip = document.createElement("div");
-      chip.className = "col-chip";
-      chip.style.opacity = "0.4";
-      chip.title = "Standard column — always included";
-      chip.textContent = col;
-      chips.appendChild(chip);
-    }
-  });
-
-  // Show extra ones as selectable
-  extra.forEach(col=>{
-    const chip = document.createElement("div");
-    chip.className = "col-chip";
-    chip.textContent = col;
-    chip.onclick = () => toggleExtraCol(chip, col);
-    chips.appendChild(chip);
-  });
-
-  document.getElementById("col-detect-result").style.display="block";
-}
-
-function toggleExtraCol(chip, col){
-  document.querySelectorAll(".col-chip").forEach(c=>c.classList.remove("selected"));
-  if(selectedExtraCol === col){
-    selectedExtraCol = null;
-    document.getElementById("sample-values").style.display="none";
-    return;
-  }
-  chip.classList.add("selected");
-  selectedExtraCol = col;
-
-  // Show sample values from this column
-  const vals = [...new Set(csvRows.map(r=>r[col]).filter(Boolean))].slice(0,20);
-  const container = document.getElementById("sample-val-chips");
-  container.innerHTML = "";
-  vals.forEach(v=>{
-    const c = document.createElement("span");
-    c.className = "col-chip tag-blue";
-    c.textContent = v;
-    container.appendChild(c);
-  });
-  document.getElementById("sample-values").style.display="block";
-}
-
-function parseCSVLine(line){
-  const result=[], re=/("(?:[^"]|"")*"|[^,]*)/g;
-  let m;
-  while((m=re.exec(line))!==null){
-    if(m.index===re.lastIndex) re.lastIndex++;
-    let val=m[1];
-    if(val.startsWith('"')&&val.endsWith('"')) val=val.slice(1,-1).replace(/""/g,'"');
-    result.push(val);
-  }
-  return result;
-}
-
-// ===== Inspection row builder =====
-function addInspRow(name="", match="", metric="days", warn=30, crit=7){
+// ===== Inspection rows =====
+function addInspRow(name="", match="", metric="hours"){
   const list = document.getElementById("insp-list");
-  if(list.children.length >= 9){ showErr("Maximum 9 inspections (keeps the bar chart readable)"); return; }
-  const idx = Date.now();
+  if(list.children.length >= 9){ showErr("Maximum 9 inspections — keeps the bar chart readable"); return; }
   const row = document.createElement("div");
   row.className = "insp-row";
-  row.dataset.idx = idx;
   row.innerHTML = `
-    <input type="text" placeholder="12 Month" value="${name}" class="insp-name" />
-    <input type="text" placeholder="05 12MO-" value="${match}" class="insp-match" />
-    <select class="insp-metric">
-      <option value="days" ${metric==="days"?"selected":""}>Days remaining</option>
+    <input type="text" placeholder="e.g. Annual Inspection" value="${escHtml(name)}" class="insp-name" oninput="rebuildChart()" />
+    <input type="text" placeholder="e.g. 05 12MO-" value="${escHtml(match)}" class="insp-match" />
+    <select class="insp-metric" onchange="rebuildChart()">
       <option value="hours" ${metric==="hours"?"selected":""}>Hours remaining</option>
+      <option value="days"  ${metric==="days" ?"selected":""}>Days remaining</option>
     </select>
-    <div style="display:flex;gap:4px;">
-      <input type="number" placeholder="Warn" value="${warn}" class="insp-warn" title="Warning threshold" style="width:60px;" />
-      <input type="number" placeholder="Crit" value="${crit}" class="insp-crit" title="Critical threshold" style="width:60px;" />
-    </div>
-    <button class="btn-del" onclick="this.closest('.insp-row').remove();updateAddBtn()">×</button>`;
+    <button class="btn-del" onclick="this.closest('.insp-row').remove();rebuildChart()">×</button>`;
   list.appendChild(row);
-  updateAddBtn();
+  rebuildChart();
 }
 
 function updateAddBtn(){
-  const count = document.getElementById("insp-list").children.length;
-  document.getElementById("btn-add-insp").style.display = count >= 9 ? "none" : "inline-block";
+  const n = document.getElementById("insp-list").children.length;
+  document.getElementById("btn-add-insp").style.display = n >= 9 ? "none" : "inline-block";
 }
 
 function getInspRows(){
@@ -572,112 +205,80 @@ function getInspRows(){
     name:  row.querySelector(".insp-name").value.trim(),
     match: row.querySelector(".insp-match").value.trim(),
     metric:row.querySelector(".insp-metric").value,
-    warn:  parseInt(row.querySelector(".insp-warn").value)||30,
-    crit:  parseInt(row.querySelector(".insp-crit").value)||7,
+    warn:  row.querySelector(".insp-metric").value === "hours" ? 100 : 30,
+    crit:  row.querySelector(".insp-metric").value === "hours" ? 25  : 7,
   }));
 }
 
-// Pre-populate with some common ones
-addInspRow("12 Month","05 12MO-","days",30,7);
-addInspRow("24 Month","05 24MO-","days",30,7);
-addInspRow("300HR/12M Airframe","05 300HR-","hours",100,25);
-
-// ===== Metric selector =====
-function selectMetric(m){
-  chartMetric = m;
-  document.getElementById("metric-weeks").classList.toggle("selected", m==="weeks");
-  document.getElementById("metric-hours").classList.toggle("selected", m==="hours");
-  document.querySelector('#metric-weeks input').checked = m==="weeks";
-  document.querySelector('#metric-hours input').checked = m==="hours";
-  // Auto-update chart title
-  const sel = document.querySelector('input[name="chart-insp"]:checked');
-  if(sel){
-    const label = m==="weeks" ? `Weeks Remaining — ${sel.value}` : `Hours Remaining — ${sel.value}`;
-    document.getElementById("chart-title").value = label;
-  }
+// ===== Bar chart radio =====
+function rebuildChart(){
+  updateAddBtn();
+  buildChartRadio();
 }
-selectMetric("weeks");
 
-// ===== Build chart radio from inspection list =====
 function buildChartRadio(){
   const rows = getInspRows();
   const container = document.getElementById("chart-radio");
+  // Preserve current selection
+  const prev = document.querySelector('input[name="chart-insp"]:checked')?.value;
   container.innerHTML = "";
-  rows.forEach(r=>{
+  if(!rows.length || rows.every(r=>!r.name)){
+    container.innerHTML = '<div class="empty-hint">Add inspections above to see options here.</div>';
+    return;
+  }
+  rows.filter(r=>r.name).forEach(r=>{
     const div = document.createElement("div");
-    div.className = "radio-opt";
+    div.className = "radio-opt" + (prev === r.name ? " selected" : "");
     div.onclick = function(){
       document.querySelectorAll(".radio-opt").forEach(o=>o.classList.remove("selected"));
       this.classList.add("selected");
       this.querySelector("input").checked = true;
-      const label = chartMetric==="weeks" ? `Weeks Remaining — ${r.name}` : `Hours Remaining — ${r.name}`;
-      document.getElementById("chart-title").value = label;
     };
-    div.innerHTML = `<input type="radio" name="chart-insp" value="${escHtml(r.name)}" />
-      <div><div class="radio-opt-lbl">${escHtml(r.name)}</div><div class="radio-opt-sub">ATA match: ${escHtml(r.match)}</div></div>`;
+    div.innerHTML = `<input type="radio" name="chart-insp" value="${escHtml(r.name)}" ${prev===r.name?"checked":""}/>
+      <div>
+        <div class="radio-opt-lbl">${escHtml(r.name)}</div>
+        <div class="radio-opt-sub">${r.metric === "hours" ? "Hours remaining" : "Days / weeks remaining"} &middot; ATA: ${escHtml(r.match)}</div>
+      </div>`;
     container.appendChild(div);
   });
 }
 
-// ===== Build review panel =====
-function buildReview(){
-  const rows = getInspRows();
-  const chartInsp = document.querySelector('input[name="chart-insp"]:checked')?.value || "—";
-  const grid = document.getElementById("review-grid");
-  grid.innerHTML = `
-    <div class="review-card">
-      <div class="review-card-title">Fleet</div>
-      <div class="review-val">${escHtml(v("fleet-name"))}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Organization</div>
-      <div class="review-val">${escHtml(v("org-name"))}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Repo Name</div>
-      <div class="review-val">${escHtml(v("repo-name"))}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Daily CSV</div>
-      <div class="review-val" style="font-size:12px;">${escHtml(v("daily-csv"))}</div>
-    </div>
-    <div class="review-card" style="grid-column:1/-1;">
-      <div class="review-card-title">Inspections (${rows.length})</div>
-      <div class="review-list">${rows.map(r=>`<span>${escHtml(r.name)}</span> — ${escHtml(r.match)} [${escHtml(r.metric)}]`).join("<br>")}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Bar Chart Inspection</div>
-      <div class="review-val" style="font-size:13px;">${escHtml(chartInsp)}</div>
-    </div>
-    <div class="review-card">
-      <div class="review-card-title">Chart Metric</div>
-      <div class="review-val">${chartMetric === "weeks" ? "Weeks Remaining" : "Hours Remaining"}</div>
-    </div>
-    ${v("veryon-url") ? `<div class="review-card" style="grid-column:1/-1;">
-      <div class="review-card-title">Veryon Export URL <span class="tag tag-green" style="vertical-align:middle;margin-left:6px;">Auto-fetch configured</span></div>
-      <div class="review-val" style="font-size:11px;word-break:break-all;font-family:var(--mono);">${escHtml(v("veryon-url"))}</div>
-    </div>` : `<div class="review-card" style="grid-column:1/-1;border-color:rgba(255,171,0,0.3);">
-      <div class="review-card-title">Veryon Export URL</div>
-      <div class="review-val" style="font-size:12px;color:var(--amber);">Not set — CSV fetch will not be automated</div>
-    </div>`}`;
-}
+// Pre-populate with two example rows
+addInspRow("", "", "hours");
+addInspRow("", "", "days");
 
 // ===== Code generation =====
 function generate(){
-  document.getElementById("generate-row").style.display="none";
+  const fleetName = document.getElementById("aircraft-type").value.trim();
+  if(!fleetName) return showErr("Enter the aircraft / fleet type");
 
-  const fleetName   = v("fleet-name");
-  const orgName     = v("org-name");
-  const repoName    = v("repo-name");
-  const dailyCsv    = v("daily-csv");
-  const weeklyCsv   = v("weekly-csv");
-  const exportSrc   = v("export-src");
-  const veryonUrl   = v("veryon-url");
-  const inspRows    = getInspRows();
-  const chartInsp   = document.querySelector('input[name="chart-insp"]:checked')?.value;
-  const chartTitle  = v("chart-title");
-  const compWindow  = parseInt(document.getElementById("comp-window").value)||200;
-  const fleetSlug   = fleetName.toLowerCase().replace(/[^a-z0-9]+/g,"_");
+  const inspRows = getInspRows();
+  if(!inspRows.length) return showErr("Add at least one inspection to track");
+  for(const r of inspRows){
+    if(!r.name || !r.match) return showErr("All inspection rows need a display name and ATA match string");
+  }
+
+  const sel = document.querySelector('input[name="chart-insp"]:checked');
+  if(!sel) return showErr("Select an inspection for the bar chart (section 03)");
+
+  // ---- Hardcoded defaults — owner customises CSV name & Veryon URL after receiving the ZIP ----
+  const orgName    = "IHC Health Services";
+  const fleetSlug  = fleetName.toLowerCase().replace(/[^a-z0-9]+/g,"_");
+  const repoName   = fleetName.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-fleet-dashboard";
+  const dailyCsv   = fleetSlug + "_due_list.csv";
+  const weeklyCsv  = "";
+  const exportSrc  = "";
+  const veryonUrl  = "";
+  const compWindow = 200;
+
+  // Derive chart settings from the chosen inspection
+  const chartInsp   = sel.value;
+  const chartRow    = inspRows.find(r => r.name === chartInsp);
+  const chartMetric = chartRow ? chartRow.metric : "hours";
+  const chartTitle  = (chartMetric === "hours" ? "Hours Remaining" : "Weeks Remaining") + " — " + chartInsp;
+
+  // Store for email notification
+  _lastConfig = { fleetName, repoName, dailyCsv, inspRows, chartInsp, chartMetric };
 
   // Build ATA match strings for Python
   const ataMatches = inspRows.map(r=>`"${r.match}"`).join(", ");
@@ -1371,234 +972,68 @@ jobs:
 
   generatedZip = zip;
 
-  // Show output panel
+  // ---- Update output panel ----
   document.getElementById("output-panel").style.display="block";
+  document.getElementById("btn-generate").disabled = true;
   document.getElementById("output-sub").innerHTML =
-    `Your <b>${fleetName}</b> dashboard is ready.<br>` +
-    `Unzip, push to a new GitHub repo named <code>${repoName}</code>, ` +
-    `drop your CSV into <code>data/</code>, and run the build script.`;
+    `<b>${fleetName}</b> fleet dashboard generated.<br>` +
+    `Repo: <code>${repoName}</code> &nbsp;&middot;&nbsp; CSV placeholder: <code>${dailyCsv}</code><br>` +
+    `<span style="color:var(--amber);">Rename CSV and add VERYON_URL secret before deploying.</span>`;
 
   document.getElementById("file-list").innerHTML = `
     <div class="file-item"><span class="file-icon">🐍</span><span class="file-name">src/build_dashboard.py</span><span class="file-desc">Veryon CSV → dashboard.json</span></div>
     <div class="file-item"><span class="file-icon">🌐</span><span class="file-name">public/index.html</span><span class="file-desc">Dashboard frontend</span></div>
-    <div class="file-item"><span class="file-icon">🎭</span><span class="file-name">playwright/fetch_csv.js</span><span class="file-desc">Logs into Veryon and downloads the CSV</span></div>
+    <div class="file-item"><span class="file-icon">🎭</span><span class="file-name">playwright/fetch_csv.js</span><span class="file-desc">Auto-fetches CSV from Veryon (add VERYON_URL secret)</span></div>
     <div class="file-item"><span class="file-icon">⚙️</span><span class="file-name">.github/workflows/build.yml</span><span class="file-desc">GitHub Actions build + deploy</span></div>
-    <div class="file-item"><span class="file-icon">⚙️</span><span class="file-name">.github/workflows/fetch-csv.yml</span><span class="file-desc">GitHub Actions daily CSV fetch (Playwright)</span></div>
+    <div class="file-item"><span class="file-icon">⚙️</span><span class="file-name">.github/workflows/fetch-csv.yml</span><span class="file-desc">Scheduled CSV fetch (runs when VERYON_URL secret is set)</span></div>
     <div class="file-item"><span class="file-icon">🔄</span><span class="file-name">sync.ps1</span><span class="file-desc">Windows Task Scheduler automation (optional)</span></div>
     <div class="file-item"><span class="file-icon">📁</span><span class="file-name">data/</span><span class="file-desc">Drop your CSV files here</span></div>
     <div class="file-item"><span class="file-icon">📄</span><span class="file-name">README.md</span><span class="file-desc">Setup instructions</span></div>`;
 
+  document.getElementById("email-sent").style.display = "none";
   window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
 }
 
 async function downloadZip(){
-  if(!generatedZip) return;
+  if(!generatedZip || !_lastConfig) return;
   const blob = await generatedZip.generateAsync({type:"blob"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `${v("repo-name") || "dashboard"}.zip`;
+  a.download = _lastConfig.repoName + ".zip";
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-// ===== Deploy panel helpers =====
-function toggleDeployPanel(){
-  const p = document.getElementById("deploy-panel");
-  p.style.display = p.style.display === "none" ? "block" : "none";
-  if(p.style.display === "block"){
-    // Restore saved token
-    const saved = localStorage.getItem("gh_token");
-    if(saved){ document.getElementById("gh-token").value = saved; document.getElementById("gh-remember").checked = true; ghTokenChanged(); }
-    const savedVyUser = localStorage.getItem("vy_user");
-    if(savedVyUser) document.getElementById("vy-user").value = savedVyUser;
-    p.scrollIntoView({behavior:"smooth"});
-  }
-}
+function sendSetupEmail(){
+  if(!_lastConfig) return;
+  const c = _lastConfig;
+  const inspList = c.inspRows.map(r=>
+    `  * ${r.name}  |  ATA match: "${r.match}"  |  metric: ${r.metric}`
+  ).join("\n");
+  const body = [
+    `New fleet dashboard configured — please complete setup.`,
+    ``,
+    `Aircraft Type : ${c.fleetName}`,
+    `Repo Name     : ${c.repoName}`,
+    `CSV Filename  : ${c.dailyCsv}  <-- rename to match Veryon export`,
+    ``,
+    `Inspections tracked:`,
+    inspList,
+    ``,
+    `Bar Chart     : ${c.chartInsp} (${c.chartMetric})`,
+    ``,
+    `TODO before deploying:`,
+    `  1. Rename data/${c.dailyCsv} to match the actual Veryon export filename`,
+    `  2. Add VERYON_URL as a GitHub Actions secret (Playwright auto-fetch)`,
+    `  3. Push to a new private GitHub repo: ${c.repoName}`,
+    `  4. Settings > Actions > General > Workflow permissions > Read and write`,
+    `  5. Settings > Pages > Source: GitHub Actions`,
+  ].join("\n");
 
-let ghUsername = null;
-async function ghTokenChanged(){
-  const token = document.getElementById("gh-token").value.trim();
-  const display = document.getElementById("gh-user-display");
-  if(!token){ display.style.display="none"; ghUsername=null; return; }
-  try{
-    const r = await fetch("https://api.github.com/user", {headers:{Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json"}});
-    if(!r.ok){ display.style.display="none"; ghUsername=null; return; }
-    const u = await r.json();
-    ghUsername = u.login;
-    display.textContent = `✓ Authenticated as @${ghUsername}`;
-    display.style.display = "block";
-  }catch(e){ display.style.display="none"; ghUsername=null; }
-}
-
-function deployLog(msg, color){
-  const el = document.getElementById("deploy-log");
-  el.style.display = "block";
-  el.innerHTML += `<span style="color:${color||"inherit"}">${msg}</span>\n`;
-  el.scrollTop = el.scrollHeight;
-}
-
-async function encryptSecret(publicKeyB64, secretValue){
-  await _sodium.ready;
-  const sodium = _sodium;
-  const key = sodium.from_base64(publicKeyB64, sodium.base64_variants.ORIGINAL);
-  const val = sodium.from_string(secretValue);
-  const encrypted = sodium.crypto_box_seal(val, key);
-  return sodium.to_base64(encrypted, sodium.base64_variants.ORIGINAL);
-}
-
-async function ghApi(token, method, path, body){
-  const r = await fetch(`https://api.github.com${path}`, {
-    method,
-    headers:{ Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json", "Content-Type":"application/json", "X-GitHub-Api-Version":"2022-11-28" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const text = await r.text();
-  let json; try{ json = JSON.parse(text); }catch(e){ json = {message: text}; }
-  if(!r.ok) throw new Error(json.message || `HTTP ${r.status}`);
-  return json;
-}
-
-async function pushFileToRepo(token, owner, repo, filePath, content){
-  // content is a plain string; we base64-encode it
-  const encoded = btoa(unescape(encodeURIComponent(content)));
-  // Check if file already exists (need its SHA to update)
-  let sha;
-  try{
-    const existing = await ghApi(token, "GET", `/repos/${owner}/${repo}/contents/${filePath}`);
-    sha = existing.sha;
-  }catch(e){ /* file doesn't exist yet — that's fine */ }
-  await ghApi(token, "PUT", `/repos/${owner}/${repo}/contents/${filePath}`, {
-    message: `Add ${filePath}`,
-    content: encoded,
-    ...(sha ? {sha} : {}),
-  });
-}
-
-async function setRepoSecret(token, owner, repo, secretName, secretValue, pubKeyId, pubKeyB64){
-  const encrypted = await encryptSecret(pubKeyB64, secretValue);
-  await ghApi(token, "PUT", `/repos/${owner}/${repo}/actions/secrets/${secretName}`, {
-    encrypted_value: encrypted,
-    key_id: pubKeyId,
-  });
-}
-
-async function deployToGitHub(){
-  if(!generatedZip){ showErr("Generate the dashboard first (click ⚡ Download ZIP)"); return; }
-
-  const token   = document.getElementById("gh-token").value.trim();
-  const vyUser  = document.getElementById("vy-user").value.trim();
-  const vyPass  = document.getElementById("vy-pass").value;
-  const remember = document.getElementById("gh-remember").checked;
-  const repoName = v("repo-name");
-  const fleetName = v("fleet-name");
-  const veryonUrl = v("veryon-url");
-
-  if(!token)   return showErr("Enter your GitHub personal access token");
-  if(veryonUrl && !vyUser)  return showErr("Enter your Veryon username (required for auto-fetch)");
-  if(veryonUrl && !vyPass)  return showErr("Enter your Veryon password (required for auto-fetch)");
-  if(!repoName) return showErr("Go back to Step 1 and fill in the repo name");
-
-  if(remember) localStorage.setItem("gh_token", token);
-  if(remember) localStorage.setItem("vy_user", vyUser);
-
-  const btn = document.getElementById("btn-go-live");
-  btn.disabled = true;
-  btn.textContent = "Deploying…";
-
-  document.getElementById("deploy-err").style.display = "none";
-  document.getElementById("deploy-success").style.display = "none";
-  document.getElementById("deploy-log").innerHTML = "";
-
-  try{
-    // 1. Verify token & get username
-    deployLog("Verifying GitHub token…");
-    if(!ghUsername){ await ghTokenChanged(); }
-    if(!ghUsername) throw new Error("Could not authenticate with GitHub. Check your token.");
-    deployLog(`✓ Authenticated as @${ghUsername}`, "var(--green)");
-
-    // 2. Create repo (private)
-    deployLog(`Creating private repo: ${ghUsername}/${repoName}…`);
-    await ghApi(token, "POST", "/user/repos", {
-      name: repoName,
-      description: `${fleetName} Fleet Maintenance Dashboard — auto-generated by IHC Dashboard Generator`,
-      private: true,
-      auto_init: false,
-    });
-    deployLog(`✓ Repo created: github.com/${ghUsername}/${repoName}`, "var(--green)");
-
-    // 3. Push files
-    const files = [];
-    await generatedZip.forEach((relPath, file) => {
-      if(!file.dir) files.push({path: relPath, file});
-    });
-
-    deployLog(`Pushing ${files.length} files…`);
-    for(const {path: fp, file} of files){
-      const content = await file.async("string");
-      await pushFileToRepo(token, ghUsername, repoName, fp, content);
-      deployLog(`  ✓ ${fp}`);
-    }
-    deployLog("✓ All files pushed", "var(--green)");
-
-    // 4. Fetch repo public key for secrets encryption
-    deployLog("Fetching repo public key for secrets…");
-    const pubKey = await ghApi(token, "GET", `/repos/${ghUsername}/${repoName}/actions/secrets/public-key`);
-
-    // 5. Set secrets
-    deployLog("Setting GitHub Actions secrets…");
-    if(veryonUrl && vyUser && vyPass){
-      await setRepoSecret(token, ghUsername, repoName, "VERYON_USER", vyUser, pubKey.key_id, pubKey.key);
-      deployLog("  ✓ VERYON_USER");
-      await setRepoSecret(token, ghUsername, repoName, "VERYON_PASS", vyPass, pubKey.key_id, pubKey.key);
-      deployLog("  ✓ VERYON_PASS");
-    }
-    if(veryonUrl){
-      await setRepoSecret(token, ghUsername, repoName, "VERYON_URL", veryonUrl, pubKey.key_id, pubKey.key);
-      deployLog("  ✓ VERYON_URL");
-    }
-    deployLog("✓ Secrets configured", "var(--green)");
-
-    // 6. Enable GitHub Pages (source: gh-pages branch, deployed by peaceiris action)
-    deployLog("Enabling GitHub Pages…");
-    try{
-      await ghApi(token, "POST", `/repos/${ghUsername}/${repoName}/pages`, {
-        build_type: "workflow",
-      });
-      deployLog("✓ GitHub Pages enabled", "var(--green)");
-    }catch(e){
-      deployLog(`  (Pages: ${e.message} — enable manually in Settings → Pages)`, "var(--amber)");
-    }
-
-    // 7. Trigger initial workflow run
-    const initialWorkflow = veryonUrl ? "fetch-csv.yml" : "build.yml";
-    deployLog(`Triggering initial ${veryonUrl ? "fetch + build" : "build"} workflow…`);
-    try{
-      await ghApi(token, "POST", `/repos/${ghUsername}/${repoName}/actions/workflows/${initialWorkflow}/dispatches`, { ref: "main" });
-      deployLog(`✓ ${veryonUrl ? "Fetch + build" : "Build"} workflow triggered`, "var(--green)");
-    }catch(e){
-      deployLog(`  (Trigger: ${e.message} — run manually from Actions tab)`, "var(--amber)");
-    }
-
-    // 8. Show success
-    const pagesUrl = `https://${ghUsername}.github.io/${repoName}/`;
-    document.getElementById("deploy-success-msg").innerHTML =
-      `<b>${fleetName}</b> dashboard deployed to <b>github.com/${ghUsername}/${repoName}</b>.<br>` +
-      `GitHub Actions fetches the Veryon CSV daily and rebuilds automatically.<br>` +
-      `The live URL will be active after the first build completes (~2 min):`;
-    document.getElementById("deploy-pages-link").href = pagesUrl;
-    document.getElementById("deploy-pages-link").textContent = `🌐 ${pagesUrl}`;
-    document.getElementById("deploy-success").style.display = "block";
-    deployLog(`\n🚀 Done! Dashboard: ${pagesUrl}`, "var(--green)");
-
-  }catch(err){
-    const errEl = document.getElementById("deploy-err");
-    errEl.textContent = `Deploy failed: ${err.message}`;
-    errEl.style.display = "block";
-    deployLog(`✗ ${err.message}`, "var(--red)");
-  }finally{
-    btn.disabled = false;
-    btn.textContent = "🚀 Go Live";
-  }
+  const subject = encodeURIComponent(`Dashboard Setup Request — ${c.fleetName} Fleet`);
+  const bodyEnc = encodeURIComponent(body);
+  window.open(`mailto:${OWNER_EMAIL}?subject=${subject}&body=${bodyEnc}`);
+  document.getElementById("email-sent").style.display = "block";
 }
 
 // ===== Build index.html =====
@@ -1887,7 +1322,6 @@ loadDashboard();
 </html>`;
 }
 
-updateProgress();
 </script>
 </body>
 </html>
