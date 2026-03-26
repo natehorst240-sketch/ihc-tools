@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/libsodium-wrappers@0.7.13/dist/modules/libsodium-wrappers.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{
   --bg:#07090c;--surface:#0e1117;--surface2:#141820;--surface3:#1a202b;
@@ -171,8 +172,20 @@ select option{background:var(--surface2);}
 </div><!-- /shell -->
 
 <script>
-// ===== CONFIG — change OWNER_EMAIL to your address =====
-const OWNER_EMAIL = "natehorst240@gmail.com";
+// ===== CONFIG =====
+const OWNER_EMAIL = "Natehorst240@gmail.com";
+
+// EmailJS — sign up free at https://www.emailjs.com
+// 1. Add a Gmail service  → copy its Service ID  → paste below
+// 2. Create a template     → copy its Template ID → paste below
+//    Template variables used: {{fleet_name}}, {{repo_name}}, {{csv_name}},
+//                              {{inspections}}, {{bar_chart}}, {{to_email}}
+// 3. Account > API Keys   → copy your Public Key  → paste below
+const EMAILJS_PUBLIC_KEY  = "";   // e.g. "abc123XYZ"
+const EMAILJS_SERVICE_ID  = "";   // e.g. "service_xxxxxxx"
+const EMAILJS_TEMPLATE_ID = "";   // e.g. "template_xxxxxxx"
+
+if(EMAILJS_PUBLIC_KEY) emailjs.init(EMAILJS_PUBLIC_KEY);
 
 // ===== State =====
 let generatedZip = null;
@@ -1035,21 +1048,46 @@ function sendSetupEmail(){
     `  5. Settings > Pages > Source: GitHub Actions`,
   ].join("\n");
 
-  const subject = encodeURIComponent(`Dashboard Setup Request — ${c.fleetName} Fleet`);
-  const bodyEnc = encodeURIComponent(body);
-
-  // Use anchor click (same pattern as ZIP download) — doesn't navigate the tab
-  const a = document.createElement("a");
-  a.href = `mailto:${OWNER_EMAIL}?subject=${subject}&body=${bodyEnc}`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  // Always show fallback text in case no mail client opens
+  // Always populate fallback textarea
   document.getElementById("email-body-text").value =
     `To: ${OWNER_EMAIL}\nSubject: Dashboard Setup Request — ${c.fleetName} Fleet\n\n${body}`;
-  document.getElementById("email-sent").style.display = "block";
   document.getElementById("email-fallback").style.display = "block";
+
+  const btn = document.querySelector(".btn-email");
+
+  if(EMAILJS_PUBLIC_KEY && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID){
+    // Send automatically via EmailJS — no mail client needed
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email:    OWNER_EMAIL,
+      fleet_name:  c.fleetName,
+      repo_name:   c.repoName,
+      csv_name:    c.dailyCsv,
+      inspections: c.inspRows.map(r=>`${r.name} (${r.match}, ${r.metric})`).join(", "),
+      bar_chart:   `${c.chartInsp} (${c.chartMetric})`,
+      body:        body,
+    }).then(()=>{
+      document.getElementById("email-sent").textContent = "✓ Email sent automatically to " + OWNER_EMAIL;
+      document.getElementById("email-sent").style.display = "block";
+      btn.textContent = "✓ Sent";
+    }).catch(err=>{
+      document.getElementById("email-sent").textContent = "Email failed (" + err.text + ") — copy the text below instead.";
+      document.getElementById("email-sent").style.color = "var(--amber)";
+      document.getElementById("email-sent").style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "📧 Retry";
+    });
+  } else {
+    // EmailJS not configured — fall back to mailto:
+    const a = document.createElement("a");
+    a.href = `mailto:${OWNER_EMAIL}?subject=${encodeURIComponent("Dashboard Setup Request — " + c.fleetName + " Fleet")}&body=${encodeURIComponent(body)}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    document.getElementById("email-sent").textContent = "Outlook should open. If not, copy the text below.";
+    document.getElementById("email-sent").style.display = "block";
+  }
 }
 
 function copyEmailBody(){
