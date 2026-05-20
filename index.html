@@ -63,12 +63,16 @@ body::after{
 .dash-card:nth-child(1){animation-delay:.5s;}
 .dash-card:nth-child(2){animation-delay:.6s;}
 .dash-card:nth-child(3){animation-delay:.7s;}
+.dash-card:nth-child(4){animation-delay:.8s;}
+.dash-card:nth-child(5){animation-delay:.9s;}
 .dash-card:hover{transform:translateY(-4px);border-color:var(--blue);box-shadow:0 8px 40px rgba(41,182,246,0.12);}
 
 .card-banner{height:6px;}
 .card-banner-blue{background:linear-gradient(90deg,var(--blue),rgba(41,182,246,0.3));}
 .card-banner-green{background:linear-gradient(90deg,var(--green),rgba(0,230,118,0.3));}
 .card-banner-amber{background:linear-gradient(90deg,var(--amber),rgba(255,171,0,0.3));}
+.card-banner-red{background:linear-gradient(90deg,var(--red),rgba(255,23,68,0.3));}
+.card-banner-cyan{background:linear-gradient(90deg,var(--cyan),rgba(39,245,238,0.3));}
 
 .card-inner{padding:24px;}
 .card-icon{font-size:28px;margin-bottom:14px;}
@@ -84,6 +88,8 @@ body::after{
 .tag-blue{border-color:rgba(41,182,246,0.35);color:var(--blue);}
 .tag-green{border-color:rgba(0,230,118,0.35);color:var(--green);}
 .tag-amber{border-color:rgba(255,171,0,0.35);color:var(--amber);}
+.tag-red{border-color:rgba(255,23,68,0.35);color:var(--red);}
+.tag-cyan{border-color:rgba(39,245,238,0.35);color:var(--cyan);}
 
 /* Tool cards (smaller) */
 .tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:56px;}
@@ -124,6 +130,8 @@ footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;justify
     <div class="status-item"><div class="pulse"></div> AW109 Dashboard Online</div>
     <div class="status-item"><div class="pulse"></div> PC-12 Dashboard Online</div>
     <div class="status-item"><div class="pulse"></div> Bell 407 Dashboard Online</div>
+    <div class="status-item"><div class="pulse"></div> King Air Dashboard Online</div>
+    <div class="status-item"><div class="pulse"></div> Jet Dashboard Online</div>
     <div class="status-item"><div class="pulse" style="background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pulseAmber 2s infinite;"></div> Veryon Sync Active</div>
   </div>
 
@@ -185,6 +193,44 @@ footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;justify
         <div class="card-desc">Inspections, component retire/overhaul tracking, utilization history, and Merlin the passive-aggressive maintenance wizard.</div>
         <div class="card-footer">
           <span class="card-url">PC-12-Fleet-Tracker</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="dash-card" href="https://natehorst240-sketch.github.io/King-Air-Dashboard/" target="_blank">
+      <div class="card-banner card-banner-red"></div>
+      <div class="card-inner">
+        <div class="card-icon">🛩️</div>
+        <div class="card-type">Fleet Dashboard</div>
+        <div class="card-title">King Air Fleet</div>
+        <div class="card-tags">
+          <span class="tag tag-red">Veryon</span>
+          <span class="tag tag-red">Components</span>
+          <span class="tag">Utilization</span>
+        </div>
+        <div class="card-desc">Inspections, component retire/overhaul tracking, and utilization history for the King Air fleet.</div>
+        <div class="card-footer">
+          <span class="card-url">King-Air-Dashboard</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="dash-card" href="https://natehorst240-sketch.github.io/Jet-Dashboard/" target="_blank">
+      <div class="card-banner card-banner-cyan"></div>
+      <div class="card-inner">
+        <div class="card-icon">✈️</div>
+        <div class="card-type">Fleet Dashboard</div>
+        <div class="card-title">Jet Fleet</div>
+        <div class="card-tags">
+          <span class="tag tag-cyan">Veryon</span>
+          <span class="tag tag-cyan">Components</span>
+          <span class="tag">Utilization</span>
+        </div>
+        <div class="card-desc">Inspections, component retire/overhaul tracking, and utilization history for the jet fleet.</div>
+        <div class="card-footer">
+          <span class="card-url">Jet-Dashboard</span>
           <span class="card-arrow">→</span>
         </div>
       </div>
